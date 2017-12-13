@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app.tefMapper">
+	<resultMap type="com.ebon.app.service.tef.vo.TefInfo" id="tefInfo">  
+        <result property="tefId" column="ID"/>
+        <result property="deptName" column="DEPTNAME"/>
+        <result property="hnte" column="HNTE"/>
+        <result property="deptId" column="DEPTID"/>
+        <result property="hnteId" column="HNTEID"/>
+        <result property="costCenterId" column="COSTCENTERID"/>
+        <result property="costCenterName" column="COSTCENTERNAME"/>
+        <result property="regDate" column="REGDATE"/>
+        <result property="workHour" column="WORKHOUR"/>
+        <result property="createDate" column="CREATEDATE"/>
+        <result property="updateDate" column="UPDATEDATE"/>
+    </resultMap>  
+	<select id="list" parameterType="com.ebon.app.service.tef.vo.TefInfo" resultMap="tefInfo" >
+		SELECT 
+			   TEF_ID            						AS ID,
+		       D.DEPT_NAME       						AS DEPTNAME,
+		       T.DEPT_ID       							AS DEPTID,
+		       T.COSTCENTER_ID						AS COSTCENTERID,
+		       CC.NAME									AS COSTCENTERNAME,
+		       C.CODE_SHORT_NAME 						AS HNTE,
+		       HNTE_ID									AS HNTEID,
+		       TO_CHAR(REG_DATE, 'yyyy-mm-dd')          AS REGDATE,
+		       WORK_HOUR         						AS WORKHOUR,
+		       TO_CHAR(CREATE_DATE, 'yyyy-mm-dd')       AS CREATEDATE,
+		       TO_CHAR(UPDATE_DATE, 'yyyy-mm-dd')       AS UPDATEDATE
+		  FROM TS_TEF T
+		  LEFT JOIN CM_DEPART D ON T.DEPT_ID = D.DEPT_NO
+		  LEFT JOIN CM_CODE C ON T.HNTE_ID = C.ID
+		  LEFT JOIN CM_COSTCENTER CC ON T.COSTCENTER_ID = CC.ID AND CC.ISTEF = '1'
+		  <where>
+			<if test="deptId != null">
+				AND DEPT_ID = #{deptId} 
+			</if>
+			<if test="hnteId != null">
+				AND HNTE_ID = #{hnteId}
+			</if>
+			<if test="costCenterId != null and costCenterId != '' ">
+				AND T.COSTCENTER_ID = #{costCenterId} 
+			</if>
+			<if test="regStartDate != null">
+				AND REG_DATE <![CDATA[>=]]> TO_DATE(#{regStartDate}, 'YYYY-MM-DD')
+			</if>
+			<if test="regEndDate != null">
+				AND REG_DATE <![CDATA[<=]]> TO_DATE(#{regEndDate}, 'YYYY-MM-DD')
+			</if>
+		</where>
+		 ORDER BY REG_DATE DESC
+	</select>
+	<select id="getTefById" parameterType="String" resultMap="tefInfo" >
+		SELECT TEF_ID            									AS ID,
+		       D.DEPT_NAME       									AS DEPTNAME,
+		       DEPT_ID       											AS DEPTID,
+		       COSTCENTER_ID										AS COSTCENTERID,
+		       C.CODE_SHORT_NAME 								AS HNTE,
+		       HNTE_ID													AS HNTEID,
+		       TO_CHAR(REG_DATE, 'yyyy-mm-dd')          	AS REGDATE,
+		       WORK_HOUR         									AS WORKHOUR,
+		       TO_CHAR(CREATE_DATE, 'yyyy-mm-dd')       AS CREATEDATE,
+		       TO_CHAR(UPDATE_DATE, 'yyyy-mm-dd')       AS UPDATEDATE
+		  FROM TS_TEF T
+		  LEFT JOIN CM_DEPART D ON T.DEPT_ID = D.DEPT_NO
+		  LEFT JOIN CM_CODE C ON T.HNTE_ID = C.ID
+		  WHERE TEF_ID = #{tefId}
+	</select>
+	<insert id="insert" parameterType="com.ebon.app.service.tef.vo.TefInfo">
+		INSERT INTO TS_TEF (TEF_ID, COSTCENTER_ID, HNTE_ID, REG_DATE, WORK_HOUR, CREATE_DATE, UPDATE_DATE) VALUES (
+			sys_guid(),
+			#{costCenterId},
+			#{hnteId},
+			TO_DATE(#{regDate}, 'YYYY-MM-DD'),
+			#{workHour},
+			sysdate,
+			sysdate
+		)
+	</insert>	
+	<update id="update" parameterType="com.ebon.app.service.tef.vo.TefInfo">
+		UPDATE TS_TEF SET 
+			COSTCENTER_ID = #{costCenterId}, 
+			HNTE_ID = #{hnteId}, 
+			REG_DATE = TO_DATE(#{regDate}, 'YYYY-MM-DD'),
+			WORK_HOUR = #{workHour}, 
+			UPDATE_DATE = sysdate 
+		WHERE TEF_ID = #{tefId}
+	</update>	
+	<delete id="delete" parameterType="String">
+		DELETE FROM TS_TEF WHERE TEF_ID = #{tefId}
+	</delete>	
+	<resultMap id="tefMap" type="HashMap">
+		<result property="tefCostCenterName" column="TEFCOSTCENTERNAME" />
+		<result property="tefHour" column="TEFHOUR" />
+		<result property="tefHourRate" column="TEFHOURRATE"/>
+		<result property="projectInfoId" column="PROJECTINFOID"/>
+		<result property="projectInfoDescription" column="PROJECTINFODESCRIPTION"/>
+		<result property="hnte" column="HNTE"/>
+		<result property="ph1" column="PH1"/>
+		<result property="ph2" column="PH2"/>
+	</resultMap>
+	<select id="getTefCost" parameterType="HashMap"  resultMap="tefMap">
+	SELECT C.CODE_SHORT_NAME          	AS PROJECTINFOID,
+		       SUBSTR(C.CODE_NAME, 5)     	AS PROJECTINFODESCRIPTION,
+		       C.CODE_SHORT_NAME          	AS HNTE,
+		       'other'                    				AS PH1,
+		       'others general'           			AS PH2,
+		       CR.RADIO                   			AS TEFHOURRATE,
+		       CC.NAME                    			AS TEFCOSTCENTERNAME,
+		       T.WORK_HOUR                		AS TEFHOUR
+		FROM TS_TEF T
+		LEFT JOIN CM_CODE C ON T.HNTE_ID = C.ID
+		LEFT JOIN CM_COSTCENTER CC ON T.COSTCENTER_ID = CC.ID AND CC.ISTEF = '1' 
+		LEFT JOIN CM_COSTCENTER_RADIO CR ON T.COSTCENTER_ID = CR.COSTCENTER_ID 
+				AND T.REG_DATE >= CR.START_DATE AND T.REG_DATE <![CDATA[<]]>= CR.END_DATE
+	 WHERE T.REG_DATE >= TO_DATE(#{startDate},'YYYY-MM-DD') 
+		 AND T.REG_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD') 
+      ORDER BY C.CODE_SHORT_NAME
+	</select>
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="nonProjectMapper">
+	<resultMap type="HashMap" id="nonProjectMap">
+		<result property="projectInfoId" column="PROJ_CODE" />
+		<result property="nonProjectId" column="NON_PROJ_CODE" />
+		<result property="nonProjectDeptName" column="DEPT_NAME" />
+		<result property="nonProjectCostCenter" column="COSTCENTER_NAME" />
+		<result property="nonProjectHourRate" column="COST_RADIO" />
+		<result property="nonProjectHour" column="HOURS" />
+	</resultMap>
+
+	<resultMap type="HashMap" id="nonProjectInfo">
+		<result property="projectInfoId" column="PROJ_CODE"></result>
+		<result property="internalOrder" column="PROJ_INTERNALORDER"></result>
+		<result property="projectInfoDescription" column="PROJ_DESCRIPTION"></result>
+		<result property="projectInfoCategory" column="PROJ_CATEGORY"></result>
+		<result property="hnte" column="PROJ_HNTE"></result>
+		<result property="ph1" column="PH1"></result>
+		<result property="ph2" column="PH2"></result>
+		<result property="ph1Code" column="PH1_CODE"></result>
+		<result property="ph2Code" column="PH2_CODE"></result>
+		<result property="customerGroupCode" column="CUSTOMER_GROUP"></result>
+	</resultMap>
+	<select id="getNonProjectTimesheet" parameterType="HashMap" resultMap="nonProjectMap" >
+		SELECT 
+			OH.OVERHEAD_CODE 					AS PROJ_CODE, 
+			U.USER_ID 							AS NON_PROJ_CODE, 
+			DP.DEPT_NAME	 					AS DEPT_NAME, 
+			CC.NAME 							AS COSTCENTER_NAME, 
+			CCR.RADIO 							AS COST_RADIO, 
+			RH.APPROVED_HOURS 					AS HOURS 
+		FROM TS_RESOURCEHOUR RH 
+		LEFT JOIN CM_USERTASK UT ON RH.USERTASK_ID = UT.USERTASK_ID 
+		LEFT JOIN CM_USERS U ON UT.USER_ID = U.USER_ID 
+		LEFT JOIN CM_USER_DEPT_HISTORY UDH ON U.USER_ID = UDH.USER_ID 
+				AND RH.TIMESHEET_DATE >= UDH.RECORD_DATE 
+				AND (RH.TIMESHEET_DATE <![CDATA[<]]> UDH.EXPIRE_DATE OR UDH.EXPIRE_DATE IS NULL) 
+		LEFT JOIN CM_COSTCENTER_RADIO CCR ON UDH.COSTCENTER_ID = CCR.COSTCENTER_ID 
+				AND RH.TIMESHEET_DATE >= CCR.START_DATE 
+				AND (RH.TIMESHEET_DATE <![CDATA[<]]> CCR.END_DATE OR CCR.END_DATE IS NULL) 
+		LEFT JOIN CM_COSTCENTER CC ON UDH.COSTCENTER_ID = CC.ID 
+		LEFT JOIN CM_DEPART DP ON UDH.DEPT_ID = DP.DEPT_NO 
+		LEFT JOIN CM_OVERHEAD OH ON UT.TASK_ID = OH.OVERHEAD_ID 
+		WHERE OH.OVERHEAD_CODE IS NOT NULL
+			AND RH.TIMESHEET_DATE >= TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+			AND RH.TIMESHEET_DATE <![CDATA[<=]]> TO_DATE(#{endDate}, 'YYYY-MM-DD') 
+	</select>
+	<select id="getNonProjectInfoById" parameterType="String" resultMap="nonProjectInfo">
+			SELECT 
+				   O.OVERHEAD_CODE 			AS PROJ_CODE,
+			       O.INTERNAL_ORDER 			AS PROJ_INTERNALORDER,
+			       O.OVERHEAD_NAME 			AS PROJ_DESCRIPTION,
+			       O.PROJECT_CATEGORY 		AS PROJ_CATEGORY,
+			       O.HNTE 							AS PROJ_HNTE,
+			       O.PH1 							AS PH1,
+			       O.PH2 							AS PH2,
+			       O.PH1_CODE 					AS PH1_CODE,
+			       O.PH2_CODE 					AS PH2_CODE,
+			       C.COMPANY_NAME_CN 		AS CUSTOMER_GROUP 
+			  FROM CM_OVERHEAD O 
+			  LEFT JOIN CM_CUSTOMER C  ON O.CUSTOMER_GROUP = C.CUSTOMER_ID 
+			 WHERE O.OVERHEAD_CODE = #{projectId} 
+	</select>
+</mapper>

@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="equipmentMapper">
+	<resultMap id="CostMap" type="HashMap">
+		<result property="projectInfoId" column="PROJ_CODE" />
+		<result property="equipmentName" column="MAE_NAME" />
+		<result property="equipmentGroup" column="MAE_GROUP" />
+		<result property="equipmentHourRate" column="HOUR_RATE" />
+		<result property="equipmentHour" column="HOURS" />
+		<result property="equipmentDeptName" column="EQUIPMENTDEPTNAME" />
+	</resultMap>
+	<resultMap type="HashMap" id="equipmentForCPCMap">
+		<result property="status" column="STATUS"/>
+		<result property="projId" column="PROJID"/>
+		<result property="projCode" column="PROJCODE"/>
+		<result property="MAEGroupCode" column="MAEGROUPCODE"/>
+		<result property="MAEGroupName" column="MAEGROUPNAME"/>
+		<result property="MAEStdName" column="MAESTDNAME"/>
+		<result property="dept" column="DEPT"/>
+		<result property="amount" column="AMOUNT"/>
+		<result property="monthDate" column="MONTHDATE"/>
+	</resultMap>
+	<!-- NE3 -->
+	<select id="getEquipmentInfoNE3" parameterType="HashMap" resultMap="CostMap">
+		SELECT TRIM(P.PROJ_CODE) 			AS PROJ_CODE,
+			    DEPT_P.NAME							AS EQUIPMENTDEPTNAME,
+			    ET.NAME									AS MAE_GROUP,
+			    EQ.MAE_STD_NAME					AS MAE_NAME,
+			    EQ.Y${endDate_startDate} 		AS HOUR_RATE,
+			    SUM((TO_NUMBER(SUBSTR(RS.END_TIME,1,2))*60+TO_NUMBER(SUBSTR(RS.END_TIME,4,2))
+			    -TO_NUMBER(SUBSTR(RS.START_TIME,1,2))*60 - TO_NUMBER(SUBSTR(RS.START_TIME,4,2))) / 60) 			AS HOURS
+			FROM PM_REGISTER_SLICE RS 
+			LEFT JOIN PM_EQP_REGISTER ER ON RS.EQP_REGISTER_ID = ER.UNIQUEID 
+			LEFT JOIN PM_EQP_TEMP_ORDER ETO ON ETO.REGISTERID = ER.UNIQUEID 
+			LEFT JOIN PM_EQP_ORDER EO ON EO.UNIQUEID = ETO.ORDERID 
+			LEFT JOIN PM_EQUIPMENT EQ ON EO.EQUIPMENT_ID = EQ.UNIQUEID 
+			LEFT JOIN PM_DICTIONARY DIC ON RS.EQP_STATUS_ID = DIC.VALUE 
+			LEFT JOIN PM_PROJECT P ON EO.PROJECT = P.UNIQUEID 
+			LEFT JOIN PM_EQUIPMENT_TEMPLATE ET ON EQ.TEMPLATE_ID = ET.UNIQUEID 
+			LEFT JOIN PM_DEPARTMENT DEPT ON EQ.DEPARTMENT_ID = DEPT.UNIQUEID 
+			LEFT JOIN PM_DEPARTMENT DEPT_P ON DEPT.PARENT_ID = DEPT_P.UNIQUEID 
+			WHERE ETO.TYPE = 'order' AND P.PROJ_CODE IS NOT NULL 
+			AND RS.REG_DATE >= TO_DATE(#{startDate},'YYYY-MM-DD') 
+			AND RS.REG_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD') 
+			AND DIC.ORDER_T = '1' AND DIC.CATEGORY_CN = '设备工作状态'
+			GROUP BY TRIM(P.PROJ_CODE),
+						  DEPT_P.NAME,
+						  ET.NAME,
+						  EQ.MAE_STD_NAME,
+						  EQ.Y${endDate_startDate} 
+			UNION ALL
+			SELECT 
+				     TRIM(P.PROJ_CODE)							AS PROJ_CODE,
+				     DEPT_P.NAME 								AS EQUIPMENTDEPTNAME,
+				     ET.NAME 										AS MAE_GROUP,
+				     EQ.MAE_STD_NAME 						AS MAE_NAME,
+				     EQ.Y${endDate_startDate} 				AS HOUR_RATE,
+				     SUM((TO_NUMBER(SUBSTR(RS.END_TIME,1,2))*60+TO_NUMBER(SUBSTR(RS.END_TIME,4,2))
+			    -TO_NUMBER(SUBSTR(RS.START_TIME,1,2))*60 - TO_NUMBER(SUBSTR(RS.START_TIME,4,2))) / 60) 			AS HOURS 
+			FROM PM_REGISTER_SLICE RS 
+			LEFT JOIN PM_EQP_REGISTER ER ON RS.EQP_REGISTER_ID = ER.UNIQUEID
+			LEFT JOIN PM_EQP_TEMP_ORDER ETO ON ETO.REGISTERID = ER.UNIQUEID
+			LEFT JOIN PM_EQUIPMENT EQ ON EQ.UNIQUEID = ER.EQUIPMENTID
+			LEFT JOIN PM_DICTIONARY DIC ON RS.EQP_STATUS_ID = DIC.VALUE 
+			LEFT JOIN PM_PROJECT P ON P.UNIQUEID = ETO.ORDERID
+			LEFT JOIN PM_EQUIPMENT_TEMPLATE ET ON EQ.TEMPLATE_ID = ET.UNIQUEID
+			LEFT JOIN PM_DEPARTMENT DEPT ON EQ.DEPARTMENT_ID = DEPT.UNIQUEID 
+			LEFT JOIN PM_DEPARTMENT DEPT_P ON DEPT.PARENT_ID = DEPT_P.UNIQUEID
+			WHERE ETO.TYPE = 'project' AND P.PROJ_CODE IS NOT NULL
+			AND RS.REG_DATE >= TO_DATE(#{startDate},'YYYY-MM-DD')
+			AND RS.REG_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD')
+			AND DIC.ORDER_T = '1' AND DIC.CATEGORY_CN = '设备工作状态'
+			GROUP BY TRIM(P.PROJ_CODE),
+						    DEPT_P.NAME,
+						    ET.NAME,
+						    EQ.MAE_STD_NAME,
+						    EQ.Y${endDate_startDate} 
+	</select>
+	<!-- CPC报表抽取MAE_NE3_CQB数据 -->
+	<select id="getEquipmentInfoNE3ForCPC" parameterType="HashMap" resultMap="equipmentForCPCMap">
+		SELECT  'MAE'                       			AS STATUS,
+		          	PROJ.PROJ_ID                		AS PROJID,
+		          	TRIM(P.PROJ_CODE)             	AS PROJCODE,
+		          	EQ.UNIQUEID                 		AS MAEGROUPCODE,
+		          	ET.NAME                     		AS MAEGROUPNAME,
+		          	EQ.MAE_STD_NAME				AS MAESTDNAME,  
+		          	DEPT_P.NAME                 		AS DEPT,
+		          	SUM(EQ.Y${currentYear} * (TO_NUMBER(SUBSTR(RS.END_TIME,1,2)) * 60 + TO_NUMBER(SUBSTR(RS.END_TIME,4,2))
+              		-TO_NUMBER(SUBSTR(RS.START_TIME,1,2)) * 60 - TO_NUMBER(SUBSTR(RS.START_TIME,4,2))) / 60)        AS AMOUNT,
+              		TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD'),'YYYY-MM')                  											AS MONTHDATE
+      		FROM PM_REGISTER_SLICE@PMS RS 
+      LEFT JOIN PM_EQP_REGISTER@PMS ER ON RS.EQP_REGISTER_ID = ER.UNIQUEID 
+      LEFT JOIN PM_EQP_TEMP_ORDER@PMS ETO ON ETO.REGISTERID = ER.UNIQUEID 
+      LEFT JOIN PM_EQP_ORDER@PMS EO ON EO.UNIQUEID = ETO.ORDERID 
+      LEFT JOIN PM_EQUIPMENT@PMS EQ ON EO.EQUIPMENT_ID = EQ.UNIQUEID 
+      LEFT JOIN PM_DICTIONARY@PMS DIC ON RS.EQP_STATUS_ID = DIC.VALUE 
+      LEFT JOIN PM_PROJECT@PMS P ON EO.PROJECT = P.UNIQUEID 
+      LEFT JOIN PM_EQUIPMENT_TEMPLATE@PMS ET ON EQ.TEMPLATE_ID = ET.UNIQUEID 
+      LEFT JOIN PM_DEPARTMENT@PMS DEPT ON EQ.DEPARTMENT_ID = DEPT.UNIQUEID 
+      LEFT JOIN PM_DEPARTMENT@PMS DEPT_P ON DEPT.PARENT_ID = DEPT_P.UNIQUEID 
+      LEFT JOIN CM_PROJ PROJ ON P.PROJ_CODE = PROJ.PROJ_SHORT_NAME 
+      	  WHERE ETO.TYPE = 'order' 
+			  AND PROJ.PROJ_SHORT_NAME  IS NOT NULL
+      		  AND PROJ.PROJ_ID IS NOT NULL 
+      		  AND PROJ.PROJ_NODE_FLAG = 'Y'
+      		  AND RS.REG_DATE >= TO_DATE(#{startDate},'YYYY-MM-DD') 
+      		  AND RS.REG_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD') 
+      		  AND DIC.ORDER_T = '1' AND DIC.CATEGORY_CN = '设备工作状态'
+      GROUP BY PROJ.PROJ_ID,
+	             	TRIM(P.PROJ_CODE),
+	             	EQ.UNIQUEID,
+	             	ET.NAME,
+	             	EQ.MAE_STD_NAME,
+	             	DEPT_P.NAME,
+	             	TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD'),'YYYY-MM')
+               
+      UNION ALL
+      
+		SELECT  'MAE'                             			AS STATUS,
+					PROJ.PROJ_ID                  		AS PROJID,
+              		TRIM(P.PROJ_CODE)                 AS PROJCODE,
+              		EQ.UNIQUEID                   		AS MAEGROUPCODE,
+              		ET.NAME                         		AS MAEGROUPNAME,
+              		EQ.MAE_STD_NAME      			AS MAESTDNAME,  
+              		DEPT_P.NAME                   		AS DEPT,
+              		SUM(EQ.Y${currentYear} * (TO_NUMBER(SUBSTR(RS.END_TIME,1,2)) * 60 + TO_NUMBER(SUBSTR(RS.END_TIME,4,2))
+              		-TO_NUMBER(SUBSTR(RS.START_TIME,1,2)) * 60 - TO_NUMBER(SUBSTR(RS.START_TIME,4,2))) / 60)        AS AMOUNT,
+              		TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD'),'YYYY-MM')                  											AS MONTHDATE
+      		FROM PM_REGISTER_SLICE@PMS RS 
+      LEFT JOIN PM_EQP_REGISTER@PMS ER ON RS.EQP_REGISTER_ID = ER.UNIQUEID
+      LEFT JOIN PM_EQP_TEMP_ORDER@PMS ETO ON ETO.REGISTERID = ER.UNIQUEID
+      LEFT JOIN PM_EQUIPMENT@PMS EQ ON EQ.UNIQUEID = ER.EQUIPMENTID
+      LEFT JOIN PM_DICTIONARY@PMS DIC ON RS.EQP_STATUS_ID = DIC.VALUE 
+      LEFT JOIN PM_PROJECT@PMS P ON P.UNIQUEID = ETO.ORDERID
+      LEFT JOIN PM_EQUIPMENT_TEMPLATE@PMS ET ON EQ.TEMPLATE_ID = ET.UNIQUEID
+      LEFT JOIN PM_DEPARTMENT@PMS DEPT ON EQ.DEPARTMENT_ID = DEPT.UNIQUEID 
+      LEFT JOIN PM_DEPARTMENT@PMS DEPT_P ON DEPT.PARENT_ID = DEPT_P.UNIQUEID
+      LEFT JOIN CM_PROJ PROJ ON P.PROJ_CODE = PROJ.PROJ_SHORT_NAME
+      	  WHERE ETO.TYPE = 'project' 
+      		  AND PROJ.PROJ_SHORT_NAME  IS NOT NULL
+      		  AND PROJ.PROJ_ID IS NOT NULL 
+      		  AND PROJ.PROJ_NODE_FLAG = 'Y'
+      		  AND RS.REG_DATE >= TO_DATE(#{startDate},'YYYY-MM-DD')
+      		  AND RS.REG_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD')
+      		  AND DIC.ORDER_T = '1' AND DIC.CATEGORY_CN = '设备工作状态'
+      GROUP BY PROJ.PROJ_ID,
+	             	TRIM(P.PROJ_CODE),
+	             	EQ.UNIQUEID,
+	             	ET.NAME,
+	             	EQ.MAE_STD_NAME,
+	             	DEPT_P.NAME,
+	             	TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD'),'YYYY-MM')     
+	</select>
+	<!-- NE4 -->
+	<select id="getEquipmentInfoNE4" parameterType="HashMap" resultMap="CostMap">
+	SELECT 
+	      TRIM(P.PROJ_CODE) 							AS PROJ_CODE,
+	      'NE4'       									AS EQUIPMENTDEPTNAME,
+	      EF.NAME     								AS MAE_GROUP,
+	      EF.MAE_STD_NAME   					AS MAE_NAME,
+	      EF.Y${endDate_startDate}          AS HOUR_RATE,
+	       CASE
+	         WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) = 0 
+	             THEN  TR.FACILITY 
+	         WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) > 0 
+	             THEN  
+	               (
+	                  CASE
+	                	<!-- 报工时间被包含于查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN TR.FACILITY
+	                  	<!--报工时间包含查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                       AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+	                      THEN #{monthCount} * 
+	                        ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE)) * 12 + (EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2)   
+	                	<!-- 查询时间包含报工时间 后半部分-->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                       AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                       AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+	                              EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+	                            ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+	               		<!-- 查询时间包含报工时间前半部分 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+	                            EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+	                            ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+	                    END 
+	                ) 
+	             
+	             WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) <![CDATA[<]]> 0
+	               THEN 
+	                 (
+	                   CASE
+	                   	<!-- 报工时间被包含于查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN TR.FACILITY
+	                  	<!--报工时间包含查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+	                      THEN #{monthCount} * 
+	                        ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)    
+	                	<!-- 查询时间包含报工时间 后半部分-->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+	                              EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+	                		ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)
+	            		<!-- 查询时间包含报工时间前半部分 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+	                            EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+	                            ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2) 
+	                    END 
+	                ) 
+	           END AS HOURS
+	 FROM PM_TEST_REGISTER TR
+	INNER JOIN PM_ENVIRONMENT_TEST ET ON ET.UNIQUEID = TR.TEST_ID
+	INNER JOIN PM_PROJECT P ON P.UNIQUEID = ET.TEST_PROJECT_NO
+	INNER JOIN PM_FACILITY_WORKING FW ON FW.ORDERID = ET.UNIQUEID AND FW.MODULUS = '1'
+	INNER JOIN PM_EN4_FACILITY EF ON EF.UNIQUEID = FW.FACILITYID
+	WHERE P.PROJ_CODE IS NOT NULL 
+	  AND TR.START_DATE<![CDATA[<]]>=TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')
+	  AND TR.END_DATE>=TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')
+	UNION ALL
+	SELECT 
+	      TRIM(P.PROJ_CODE) AS PROJ_CODE,
+	      'NE4'       AS EQUIPMENTDEPTNAME,
+	      EF.NAME     AS MAE_GROUP,
+	      EF.MAE_STD_NAME   AS  MAE_NAME,
+	      EF.Y${endDate_startDate}         AS  HOUR_RATE,
+	       CASE
+	         WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) = 0 
+	             THEN  TR.FACILITY 
+	         WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) > 0 
+	             THEN  
+	               (
+	                  CASE
+	                	<!-- 报工时间被包含于查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN TR.FACILITY
+	                 	<!--报工时间包含查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                       AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+	                      THEN #{monthCount} * 
+	                        ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE)) * 12 + (EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2)   
+	                	<!-- 查询时间包含报工时间 后半部分-->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                       AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                       AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+	                              EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+	                            ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+	               		<!-- 查询时间包含报工时间前半部分 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+	                            EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+	                            ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+	                    END 
+	                ) 
+	             
+	             WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) <![CDATA[<]]> 0
+	               THEN 
+	                 (
+	                   CASE
+	                   	<!-- 报工时间被包含于查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN TR.FACILITY
+	                  	<!--报工时间包含查询时间 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+	                      THEN #{monthCount} * 
+	                        ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)    
+	                  	<!-- 查询时间包含报工时间 后半部分-->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+	                              EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+	                	ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)
+	                  	<!-- 查询时间包含报工时间前半部分 -->
+	                      WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+	                        AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+	                      THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+	                            EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+	                            ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2) 
+	                    END 
+	                ) 
+	           END AS HOURS
+	 FROM PM_TEST_REGISTER TR
+	INNER JOIN PM_TEST_VIBRATION TV ON TV.UNIQUEID = TR.TEST_ID
+	INNER JOIN PM_PROJECT P ON P.UNIQUEID = TV.PROJECT_NO
+	INNER JOIN PM_FACILITY_WORKING FW ON FW.ORDERID = TV.UNIQUEID  
+	INNER JOIN PM_EN4_FACILITY EF ON EF.UNIQUEID = FW.FACILITYID
+	WHERE P.PROJ_CODE IS NOT NULL 
+	  AND TR.START_DATE<![CDATA[<]]>=TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')
+	  AND TR.END_DATE>=TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')
+	</select>
+	
+	<select id="getEquipmentInfoNE4ForCPC" parameterType="HashMap" resultMap="equipmentForCPCMap">
+		SELECT  'MAE'                                                             										AS STATUS,
+         			PROJ.PROJ_ID                                                        								AS PROJID,
+         			PROJ.PROJ_SHORT_NAME                                                  						AS PROJCODE,
+         			EF.UNIQUEID                                                     									AS MAEGROUPCODE,
+         			EF.NAME                                                           									AS MAEGROUPNAME,
+         			EF.MAE_STD_NAME                                               								AS MAESTDNAME,
+         			'NE4'                                           														AS DEPT,
+         			TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM') 	AS MONTHDATE,
+         			SUM(EF.Y${currentYear} * NVL(
+         			CASE
+           				WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) = 0 
+               				THEN  TR.FACILITY 
+           				WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) > 0 
+               				THEN  
+                 			(
+                    			CASE
+									<!-- 报工时间被包含于查询时间 -->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        				THEN TR.FACILITY
+									<!--报工时间包含查询时间 -->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                         				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+                        				THEN #{monthCount} * 
+                          					ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE)) * 12 + (EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2)   
+									<!-- 查询时间包含报工时间 后半部分-->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                         				AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                         				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        				THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+                                			EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+                              				ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+									<!-- 查询时间包含报工时间前半部分 -->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        				THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+                              				EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+                              				ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+                      			END 
+                  			) 
+               
+               			WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) <![CDATA[<]]> 0
+                 			THEN 
+                   			(
+                     			CASE
+									<!-- 报工时间被包含于查询时间 -->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        				THEN TR.FACILITY
+									<!--报工时间包含查询时间 -->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+                        				THEN #{monthCount} * 
+                          					ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)    
+									<!-- 查询时间包含报工时间 后半部分-->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        				THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+                                			EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+                  							ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)
+									<!-- 查询时间包含报工时间前半部分 -->
+                        			WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          				AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        				THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+                              				EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+                              				ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2) 
+                      			END 
+                  			) 
+             			END,0)
+             		) AS AMOUNT
+   			FROM PM_TEST_REGISTER@PMS TR
+			INNER JOIN PM_ENVIRONMENT_TEST@PMS ET ON ET.UNIQUEID = TR.TEST_ID
+			INNER JOIN PM_PROJECT@PMS P ON P.UNIQUEID = ET.TEST_PROJECT_NO
+			INNER JOIN PM_FACILITY_WORKING@PMS FW ON FW.ORDERID = ET.UNIQUEID AND FW.MODULUS = '1'
+			INNER JOIN PM_EN4_FACILITY@PMS EF ON EF.UNIQUEID = FW.FACILITYID
+			 LEFT JOIN CM_PROJ PROJ ON P.PROJ_CODE = PROJ.PROJ_SHORT_NAME
+  		   WHERE PROJ.PROJ_SHORT_NAME IS NOT NULL
+    		   AND PROJ.PROJ_ID IS NOT NULL
+    		   AND PROJ.PROJ_NODE_FLAG = 'Y'
+    		   AND TR.START_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')
+    		   AND TR.END_DATE>=TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')
+  	   GROUP BY TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),
+  					  PROJ.PROJ_ID,
+  					  PROJ.PROJ_SHORT_NAME,
+  					  EF.UNIQUEID,
+  					  EF.NAME,
+  					  EF.MAE_STD_NAME 
+  
+  		UNION ALL
+  
+		SELECT  'MAE'                                                             										AS STATUS,
+					PROJ.PROJ_ID                                                        								AS PROJID,
+         			PROJ.PROJ_SHORT_NAME                                                  						AS PROJCODE,
+         			EF.UNIQUEID                                                     									AS MAEGROUPCODE,
+         			EF.NAME                                                           									AS MAEGROUPNAME,
+         			EF.MAE_STD_NAME                                               								AS MAESTDNAME,
+         			'NE4'                                                             										AS DEPT,
+         			TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM')   	AS MONTHDATE,
+         			SUM(EF.Y${currentYear} * NVL(
+         				CASE
+           					WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) = 0 
+               					THEN  TR.FACILITY 
+           					WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) > 0 
+               					THEN  
+                 				(
+                    				CASE
+										<!-- 报工时间被包含于查询时间 -->
+                        				WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          					AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        					THEN TR.FACILITY
+										<!--报工时间包含查询时间 -->
+                        				WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                         					AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+                        					THEN #{monthCount} * 
+                          						ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE)) * 12 + (EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2)   
+										<!-- 查询时间包含报工时间 后半部分-->
+                        				WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                         					AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                         					AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        					THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+                                				EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+                              					ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+										<!-- 查询时间包含报工时间前半部分 -->
+                        				WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          					AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          					AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                       						THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+                              					EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+                              					ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE))+1),2) 
+                      				END 
+                  				) 
+               					WHEN (EXTRACT(YEAR FROM TR.END_DATE)-EXTRACT(YEAR FROM TR.START_DATE))*12+(EXTRACT(MONTH FROM TR.END_DATE)-EXTRACT(MONTH FROM TR.START_DATE)) <![CDATA[<]]> 0
+                 					THEN 
+                  			 		(
+                     					CASE
+											<!-- 报工时间被包含于查询时间 -->
+											WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          						AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        						THEN TR.FACILITY
+ 											<!--报工时间包含查询时间 -->
+                        					WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          						AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM') 
+                        						THEN #{monthCount} * 
+                          							ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)    
+											<!-- 查询时间包含报工时间 后半部分-->
+                        					WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+												AND TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+												AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        						THEN ((EXTRACT(YEAR FROM TR.END_DATE) -EXTRACT(YEAR FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'))) * 12 + 
+                                					EXTRACT(MONTH FROM TR.END_DATE) -EXTRACT(MONTH FROM TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')) + 1) * 
+                  									ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2)
+											<!-- 查询时间包含报工时间前半部分 -->
+                        					WHEN TO_DATE(TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          						AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') >= TO_DATE(TO_CHAR(TR.START_DATE,'YYYY-MM'),'YYYY-MM')
+                          						AND TO_DATE(TO_CHAR(TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),'YYYY-MM') <![CDATA[<]]>= TO_DATE(TO_CHAR(TR.END_DATE,'YYYY-MM'),'YYYY-MM')
+                        						THEN ((EXTRACT(YEAR FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(YEAR FROM TR.START_DATE)) * 12 + 
+                              						EXTRACT(MONTH FROM TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')) - EXTRACT(MONTH FROM TR.START_DATE) + 1) * 
+                              						ROUND(TR.FACILITY/((EXTRACT(YEAR FROM TR.START_DATE)-EXTRACT(YEAR FROM TR.END_DATE))*12+(EXTRACT(MONTH FROM TR.START_DATE)-EXTRACT(MONTH FROM TR.END_DATE))+1),2) 
+                      					END 
+                  					) 
+             					END,0)
+             				) AS AMOUNT
+   					FROM PM_TEST_REGISTER@PMS TR
+  					INNER JOIN PM_TEST_VIBRATION@PMS TV ON TV.UNIQUEID = TR.TEST_ID
+  					INNER JOIN PM_PROJECT@PMS P ON P.UNIQUEID = TV.PROJECT_NO
+  					INNER JOIN PM_FACILITY_WORKING@PMS FW ON FW.ORDERID = TV.UNIQUEID  
+  					INNER JOIN PM_EN4_FACILITY@PMS EF ON EF.UNIQUEID = FW.FACILITYID
+  					LEFT JOIN CM_PROJ PROJ ON P.PROJ_CODE = PROJ.PROJ_SHORT_NAME
+  					WHERE PROJ.PROJ_SHORT_NAME IS NOT NULL
+    					AND PROJ.PROJ_ID IS NOT NULL
+    					AND PROJ.PROJ_NODE_FLAG = 'Y'
+    					AND TR.START_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS')
+    					AND TR.END_DATE>=TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')
+  				GROUP BY TO_CHAR(TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM'),
+  							   PROJ.PROJ_ID,
+  							   PROJ.PROJ_SHORT_NAME,
+  							   EF.UNIQUEID,
+  							   EF.NAME,
+  							   EF.MAE_STD_NAME 
+  	</select>
+  	
+	<update id="resetMAEFlag">
+		UPDATE CPC_MAE_COST T SET T.FLAG = '0' WHERE T.FLAG = '1'
+	</update>
+	
+	<update id="updateMAEInfo" parameterType="HashMap">
+		UPDATE CPC_MAE_COST T 
+			 SET
+			   		T.AMOUNT = #{amount},
+			   		T.FLAG = '1' 
+		<where>
+			<if test="dept!=null">
+				T.MAE_TYPE = #{dept}
+			</if>
+			<if test="MAEGroupName!=null">
+			 	AND T.MAE_GROUP_NAME = #{MAEGroupName}
+			</if>
+			<if test="projId!=null">
+			 	AND T.PROJ_ID = #{projId}
+			 </if>
+			 <if test="projCode!=null">
+			 	AND T.PROJ_CODE = #{projCode}
+			 </if>	
+			 <if test="monthDate!=null">
+			 	AND T.MAE_DATE = TO_DATE(#{monthDate},'YYYY-MM')
+			 </if>
+			 <if test="monthDate==null">
+			 	AND T.MAE_DATE = TO_DATE('1900-1','YYYY-MM')
+			 </if>
+			 <if test="MAEGroupCode!=null">
+			 	AND T.MAE_CODE = #{MAEGroupCode}
+			 </if>
+			 <if test="MAEStdName!=null">
+			 	AND T.MAE_STD_NAME = #{MAEStdName}
+			 </if>
+				AND T.STATUS = 'MAE' 
+		</where> 
+	</update>
+	
+	<insert id="insertMAE" parameterType="HashMap">
+		INSERT INTO CPC_MAE_COST T
+		 		  (
+		 		  T.MAE_TYPE,
+		 		  T.MAE_GROUP_NAME,
+		 		  T.PROJ_ID,
+		 		  T.PROJ_CODE,
+		 		  T.AMOUNT,
+		 		  T.MAE_DATE,
+		 		  T.FLAG,
+		 		  T.MAE_CODE,
+		 		  T.MAE_STD_NAME,
+		 		  T.STATUS
+		 		  ) 
+	   VALUES (
+	   <if test="dept!=null">
+	   		#{dept},
+	   </if>
+	   <if test="dept==null">
+	   		null,
+	   </if>
+	   <if test="MAEGroupName!=null">
+	   		#{MAEGroupName},
+	   </if>
+	   <if test="MAEGroupName==null">
+	   		null,
+	   </if>
+	   <if test="projId!=null">
+	   		#{projId},
+	   </if>
+	   <if test="projId==null">
+	   		null,
+	   </if>
+	   <if test="projCode!=null">
+	   		#{projCode},
+	   </if>
+	   <if test="projCode==null">
+	   		null,
+	   </if>
+	   <if test="amount!=null">
+	   		#{amount},
+	   </if>
+	   <if test="amount==null">
+	   		null,
+	   </if>
+	   <if test="monthDate!=null">
+	   		TO_DATE(#{monthDate},'YYYY-MM'),
+	   </if>
+	   '1',
+	   <if test="MAEGroupCode!=null">
+	   		#{MAEGroupCode},
+	   </if>
+	   <if test="MAEGroupCode==null">
+	   		null,
+	   </if>
+	   <if test="MAEStdName!=null">
+	   		#{MAEStdName},
+	   </if>
+	   <if test="MAEStdName==null">
+	   		null,
+	   </if>
+	   		'MAE'	
+	   			)
+	</insert>
+	<delete id="deleteEquipmentInfoForCPC">
+		delete from CPC_MAE_COST
+	</delete>
+</mapper>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+					http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+					http://www.springframework.org/schema/tx
+					http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+					http://www.springframework.org/schema/context
+					http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+	<!-- 三项费用同步 -->				
+	<bean id="ThreeFeeService" class="com.ebon.rpc.sap.service.impl.ThreeFeeService"></bean>
+	<bean id="jobtaskThreeFeeService"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="ThreeFeeService" />
+		</property>
+		<property name="targetMethod">
+			<value>getThreeFeeAllData</value>
+		</property>
+	</bean>
+	<bean id="doTimeThreeFeeService" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="jobtaskThreeFeeService" />
+		</property>
+		<property name="cronExpression">
+			<value>00 00 06 * * ?</value>
+		</property>
+	</bean>
+	<bean id="startQuertzThreeFeeService"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="doTimeThreeFeeService" />
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<value>
+				org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+				org.quartz.threadPool.threadCount=1
+			</value>
+		</property>
+		<property name="autoStartup">
+			<value>true</value>
+		</property>
+	</bean>
+	
+	<!-- PMS设备数据同步 ，已经废弃-->
+<!-- 	<bean id="PutMAEDataToTableService" class="com.ebon.rpc.equipment.impl.EquipmentService"></bean>
+	<bean id="jobtaskPutMAEDataToTableService"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="PutMAEDataToTableService" />
+		</property>
+		<property name="targetMethod">
+			<value>putEquipmentDataToTable</value>
+		</property>
+	</bean>
+	<bean id="doTimePutMAEDataToTableService" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="jobtaskPutMAEDataToTableService" />
+		</property>
+		<property name="cronExpression">
+			<value>00 05 06 * * ?</value>
+		</property>
+	</bean>
+	<bean id="startQuertzPutMAEDataToTableService"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="doTimePutMAEDataToTableService" />
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<value>
+				org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+				org.quartz.threadPool.threadCount=1
+			</value>
+		</property>
+		<property name="autoStartup">
+			<value>true</value>
+		</property>
+	</bean>
+ -->	
+ 	<!-- 项目预算 -->
+ 	<bean id="budgetService" class="com.ebon.v2.eai.budget.service.BudgetService"></bean>
+ 	
+ 	
+ 	 <!-- 注册一个普通的bean -->
+ 	<bean id="budgetCPCService" class="com.ebon.v2.eai.budgetcpc.service.BudgetCPCService"></bean>
+ 	<!-- 里程碑点跟踪 -->
+ 	<bean id="milestoneCPCService" class="com.ebon.v2.eai.milestonecpc.service.MilestoneCPCService" ></bean>
+ 	
+ 	
+ 	<!-- 配置一个作业类for项目预算 -->
+ 	<bean id="budgetForCPC" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+ 		<property name="targetObject" ref="budgetCPCService"></property>
+ 		<property name="targetMethod" value="insertBudgetCPC"></property>
+ 	</bean>
+ 	
+ 	<bean id="doBudgetCPCService" name="doBudgetCPCService" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+ 		<property name="jobDetail" ref="budgetForCPC"></property>
+ 		<property name="startDelay" value="0"></property>
+ 		<!-- 每20秒执行一次，模拟月份 -->
+ 		<property name="repeatInterval" value="20000"></property>
+ 	</bean>
+ 	
+ 	
+ 	<!-- 配置一个作业类for里程碑点 -->
+ 	<bean id="milestoneForCPC" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+ 		<property name="targetObject" ref="milestoneCPCService"></property>
+ 		<property name="targetMethod" value="insertMilestoneCPC"></property>
+ 	</bean>
+ 	
+ 	<bean id="doMilestoneCPCService" name="doMilestoneCPCService" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+ 		<property name="jobDetail" ref="milestoneForCPC"></property>
+ 		<property name="startDelay" value="0"></property>
+ 		<!-- 每20秒执行一次，模拟月份 -->
+ 		<property name="repeatInterval" value="20000"></property>
+ 	</bean>
+ 	
+ 	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean" id="startQuertzBudgetCPCService" name="startQuertzBudgetCPCService">
+ 		<property name="triggers">
+			<list>
+				<ref bean="doMilestoneCPCService" />
+				<ref bean="doBudgetCPCService" />
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<value>
+				org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+				org.quartz.threadPool.threadCount=1
+			</value>
+		</property>
+		<property name="autoStartup">
+			<value>true</value>
+		</property>
+ 	</bean>
+ 	
+	<!-- V2 -->
+	<!--  UCS Timesheet -->
+	<bean id="timesheetService" class="com.ebon.v2.eai.ucs.service.TimesheetService"></bean>
+	<bean id="jobUcsTimesheet"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="timesheetService" />
+		</property>
+		<property name="targetMethod">
+			<value>doAutoCommand</value>
+		</property>
+	</bean>
+	<bean id="doTimesheetService" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="jobUcsTimesheet" />
+		</property>
+		<property name="cronExpression">
+			<value>0 2,12,22,32,42,52 * * * ?</value>
+		</property>
+	</bean>
+	<bean id="startQuertzTimesheetService" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="doTimesheetService" />
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<value>
+				org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+				org.quartz.threadPool.threadCount=1
+			</value>
+		</property>
+		<property name="autoStartup">
+			<value>true</value>
+		</property>
+	</bean>
+		
+	<!--  Lims Usage -->
+	<bean id="limsUsageService" class="com.ebon.v2.eai.lims.service.LimsUsageService"></bean>
+	<bean id="jobLimsTimesheet"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="limsUsageService" />
+		</property>
+		<property name="targetMethod">
+			<value>doAutoCommand</value>
+		</property>
+	</bean>
+	<bean id="dolimsUsageService" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="jobLimsTimesheet" />
+		</property>
+		<property name="cronExpression">
+			<value>00 00 06 * * ?</value>
+		</property>
+	</bean>
+	<bean id="startQuertzLimsUsageService" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="dolimsUsageService" />
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<value>
+				org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+				org.quartz.threadPool.threadCount=1
+			</value>
+		</property>
+		<property name="autoStartup">
+			<value>true</value>
+		</property>
+	</bean>
+	
+	<!--  Lims Usage -->
+	<bean id="mainProjectInfoService" class="com.ebon.v2.eai.lims.service.MainProjectInfoService"></bean>
+	<bean id="jobMainProjectInfo"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="mainProjectInfoService" />
+		</property>
+		<property name="targetMethod">
+			<value>pushProjectInfo</value>
+		</property>
+	</bean>
+	<bean id="doMainProjectInfoService" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="jobMainProjectInfo" />
+		</property>
+		<property name="cronExpression">
+			<value>00 00 06 * * ?</value>
+		</property>
+	</bean>
+	<bean id="startQuertzMainProjectInfoService" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="doMainProjectInfoService" />
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<value>
+				org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+				org.quartz.threadPool.threadCount=1
+			</value>
+		</property>
+		<property name="autoStartup">
+			<value>true</value>
+		</property>
+	</bean>
+	
+	<bean name="schedulerMap" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<entry key="ThreeFeeService" value-ref="startQuertzThreeFeeService" />
+				<!-- <entry key="PutMAEDataToTableService" value-ref="startQuertzPutMAEDataToTableService" /> -->
+			</map>
+		</constructor-arg>
+	</bean>	
+</beans>

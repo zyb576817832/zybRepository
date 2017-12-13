@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.oplhistory">
+
+	<insert id="add" parameterType="com.ebon.v3.vo.OplHistory">
+		INSERT INTO APP_OPL_HISTORY(
+			OPL_ID,
+			OPL_DESC,
+			RESP_USER,
+			OPL_LEVEL,
+			OPL_DEGREE,
+			OPL_DESCRIBE,
+			CREATE_USER,
+			CREATE_TIME
+		) VALUES(
+			#{oplId,jdbcType=VARCHAR},
+			#{oplDesc,jdbcType=VARCHAR},
+			#{respUser,jdbcType=VARCHAR},
+			#{oplLevel,jdbcType=VARCHAR},
+			#{oplDegree,jdbcType=VARCHAR},
+			#{oplDescribe,jdbcType=VARCHAR},
+			#{createUser,jdbcType=VARCHAR},
+			sysdate
+ 		)
+	</insert>
+	
+
+</mapper>

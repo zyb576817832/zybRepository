@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="projectMapper">
+	<resultMap type="com.ebon.rpc.project.vo.ProjectInfo" id="projectInfoMap">
+		<result property="projectName" column="PROJECTNAME" />
+		<result property="projectCode" column="PROJECTCODE" />
+		<result property="projectType" column="PROJECTTYPE" />
+		<result property="projectStage" column="PROJECTSTAGE" />
+		<result property="projectStatus" column="PROJECTSTATUS" />
+		<result property="ph1" column="PH1" />
+		<result property="ph2" column="PH2" />
+		<result property="customerName" column="CUSTOMERNAME" />
+		<result property="customerCode" column="CUSTOMERCODE" />
+		<result property="numberB" column="NUMBERB" />
+		<result property="number0" column="NUMBER0" />
+		<result property="pm" column="PM" />
+		<result property="projectSize" column="PROJECTSIZE" />
+		<result property="sop" column="SOP" />
+		<result property="csop" column="CSOP" />
+		<result property="customerAbbr" column="CUSTOMERABBR" />
+		<result property="projectId" column="PROJECTID" />
+		<result property="lastUpdateDate" column="LASTUPDATEDATE" />
+		<result property="miniType" column="MINITYPE"/>
+	</resultMap>	
+	<resultMap type="HashMap" id="projectInfo">
+		<result property="projectInfoId" column="PROJ_CODE"></result>
+		<result property="internalOrder" column="PROJ_INTERNALORDER"></result>
+		<result property="projectInfoDescription" column="PROJ_DESCRIPTION"></result>
+		<result property="projectInfoCategory" column="PROJ_CATEGORY"></result>
+		<result property="hnte" column="PROJ_HNTE"></result>
+		<result property="technologyCategory" column="PROJ_TECH_CATEGORY"></result>
+		<result property="ph1" column="PH1"></result>
+		<result property="ph2" column="PH2"></result>
+		<result property="ph1Code" column="PH1_CODE"></result>
+		<result property="ph2Code" column="PH2_CODE"></result>
+		<result property="customerGroupCode" column="CUSTOMER_GROUP"></result>
+		<result property="customerSapCode" column="SAP_CODE"></result>
+		<result property="customerSapName" column="SAP_NAME"></result>
+	</resultMap>	
+	<!-- 查询项目信息根据查询条件 -->
+	<select id="getProjectInfo" parameterType="com.ebon.rpc.project.vo.ProjectRequest" resultMap="projectInfoMap">
+		SELECT PROJECTCODE,PROJECTNAME,PROJECTTYPE,PROJECTSTAGE,PROJECTSTATUS,PH1,PH2,CUSTOMERNAME,CUSTOMERCODE,NUMBERB,NUMBER0,PM,PROJECTSIZE,SOP,CSOP,CUSTOMERABBR,PROJECTID,CREATED_DATE,MINITYPE 
+		FROM V_PROJECT 
+		<where>
+				1=1 
+			<if test="startDate!=null">
+				AND CREATED_DATE >= TO_DATE(#{startDate},'yyyy-mm-dd') 
+			</if>
+			<if test="endDate!=null">
+				AND CREATED_DATE <![CDATA[<]]>= TO_DATE(#{endDate},'yyyy-mm-dd') 
+			</if>
+			<if test="projectName!=null">
+				AND PROJECTNAME LIKE '%'||#{projectName}||'%' 
+			</if>
+			<if test="projectCode!=null">
+				AND PROJECTCODE = #{projectCode}
+			</if>
+			<if test="projectType!=null">
+				AND PROJECTTYPE LIKE '%'||#{projectType}||'%' 
+			</if>
+			<if test="projectStage!=null">
+				AND PROJECTSTAGE = #{projectStage} 
+			</if>
+			<if test="projectStatus!=null">
+				AND PROJECTSTATUS = #{projectStatus} 
+			</if>
+			<if test="ph1!=null">
+				AND PH1 LIKE '%'||#{ph1}||'%' 
+			</if>
+			<if test="extendFields!=null">
+				AND ${extendFields} 
+			</if>
+		</where>
+	</select>	
+	<select id="getProjectInfoById" parameterType="String" resultMap="projectInfo">
+		 SELECT P.PROJ_SHORT_NAME  			AS PROJ_CODE,
+			        P.INTERNALORDER    			AS PROJ_INTERNALORDER,
+			        P.PROJ_NAME     	 				AS PROJ_DESCRIPTION,
+			        CO1.CODE_NAME      			AS PROJ_CATEGORY,
+			        CO2.CODE_NAME      			AS PROJ_HNTE,
+			        CO3.CODE_NAME          		AS PROJ_TECH_CATEGORY,
+			        PHT.ENAME         				AS PH1,
+			        PH.ENAME           				AS PH2,
+			        PH.PARENT_ID       				AS PH1_CODE,
+			        PH.PH_ID           					AS PH2_CODE,
+			        C.COMPANY_NAME_CN 			AS CUSTOMER_GROUP,
+			        C.SAP_CODE         				AS SAP_CODE,
+			        C.SAP_NAME         				AS SAP_NAME 
+		    FROM CM_PROJ P 
+			 LEFT JOIN CM_PH PH ON P.PH2 = PH.PH_ID 
+			 LEFT JOIN CM_PH PHT ON PH.PARENT_ID = PHT.PH_ID 
+			 LEFT JOIN CM_CUSTOMER C ON P.CUSTOMER = C.CUSTOMER_ID 
+			 LEFT JOIN CM_CODE CO1 ON P.PROJ_TYPE = CO1.ID 
+			 LEFT JOIN CM_CODE CO2 ON P.HNTE = CO2.ID
+			 LEFT JOIN CM_CODE CO3 ON P.TECH_CTGRY_1 = CO3.ID 
+		   WHERE P.ORIG_PROJ_ID IS NULL 
+			   AND P.PROJ_NODE_FLAG = 'Y' 
+			   AND P.PROJ_SHORT_NAME = #{projectId} 
+	</select>
+	<!-- 根据ProjectShortName查询ProjectId -->
+	<select id="getProjectIdByProjectShortName" parameterType="String" resultType="String">
+		SELECT P.PROJ_ID FROM CM_PROJ P
+		WHERE  P.ORIG_PROJ_ID IS NULL 
+			 AND P.PROJ_NODE_FLAG = 'Y' 
+			 AND P.PROJ_SHORT_NAME = #{projectShortName}
+	</select>	
+</mapper>

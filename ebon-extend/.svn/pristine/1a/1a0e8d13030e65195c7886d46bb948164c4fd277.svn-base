@@ -1,0 +1,40 @@
+.md{
+			height:16px;
+			line-height:16px;
+			background-position:2px center;
+			text-align:right;
+			font-weight:bold;
+			padding:0 2px;
+			color:#0087E0;
+			font-size:20px;
+}
+.md1{
+	height:16px;
+	line-height:16px;
+	background-position:2px center;
+	text-align:right;
+	font-weight:bold;
+	padding:0 2px;
+	color:#6B6B6B;
+	font-size:20px;
+}
+.md3{
+			height:16px;
+			line-height:16px;
+			background-position:2px center;
+			text-align:right;
+			font-weight:bold;
+			padding:0 2px;
+			color:#0087E0;
+			font-size:15px;
+}
+.md4{
+	height:16px;
+	line-height:16px;
+	background-position:2px center;
+	text-align:right;
+	font-weight:bold;
+	padding:0 2px;
+	color:#6B6B6B;
+	font-size:15px;
+}

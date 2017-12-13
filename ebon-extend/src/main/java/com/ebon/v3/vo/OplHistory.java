@@ -1,0 +1,80 @@
+package com.ebon.v3.vo;
+
+import com.ebon.framework.bo.BusinessObject;
+
+public class OplHistory extends BusinessObject{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private String oplId;//opl的
+	
+	private String oplDesc;//问题描述
+	
+	private String respUser;//责任人
+	
+	private String oplLevel;//优先级
+	
+	private String oplDegree;//严重程度
+	
+	private String oplDescribe;//备注
+
+	@Override
+	public String toString() {
+		return "OplHistory [oplId=" + oplId + ", oplDesc=" + oplDesc
+				+ ", respUser=" + respUser + ", oplLevel=" + oplLevel
+				+ ", oplDegree=" + oplDegree + ", oplDescribe=" + oplDescribe
+				+ "]";
+	}
+
+	public String getOplId() {
+		return oplId;
+	}
+
+	public void setOplId(String oplId) {
+		this.oplId = oplId;
+	}
+
+	public String getOplDesc() {
+		return oplDesc;
+	}
+
+	public void setOplDesc(String oplDesc) {
+		this.oplDesc = oplDesc;
+	}
+
+	public String getRespUser() {
+		return respUser;
+	}
+
+	public void setRespUser(String respUser) {
+		this.respUser = respUser;
+	}
+
+	public String getOplLevel() {
+		return oplLevel;
+	}
+
+	public void setOplLevel(String oplLevel) {
+		this.oplLevel = oplLevel;
+	}
+
+	public String getOplDegree() {
+		return oplDegree;
+	}
+
+	public void setOplDegree(String oplDegree) {
+		this.oplDegree = oplDegree;
+	}
+
+	public String getOplDescribe() {
+		return oplDescribe;
+	}
+
+	public void setOplDescribe(String oplDescribe) {
+		this.oplDescribe = oplDescribe;
+	}
+	
+}

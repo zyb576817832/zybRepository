@@ -1,0 +1,13 @@
+#####uPMS172正式库#######
+ebon.jdbc.driver=oracle.jdbc.driver.OracleDriver
+ebon.jdbc.url=jdbc:oracle:thin:@174.34.50.44:1521/p6r8db
+ebon.jdbc.username=ebon
+ebon.jdbc.password=ebon
+#####uPMS172正式库#######
+
+#####PMS186正式库#######
+pms.jdbc.driver=oracle.jdbc.driver.OracleDriver
+pms.jdbc.url=jdbc:oracle:thin:@174.34.50.186:1521:upms
+pms.jdbc.username=uaes
+pms.jdbc.password=uaes
+#####PMS186正式库#######

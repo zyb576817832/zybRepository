@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app.service.costCenterMapper">
+	<resultMap type="HashMap" id="costCenterMap">
+        <result property="id" column="ID"/>
+        <result property="name" column="NAME"/>
+    </resultMap>  
+	<select id="getListByIsTEF" parameterType="String" resultMap="costCenterMap" >
+		SELECT ID AS ID, 
+				NAME AS NAME 
+		FROM CM_COSTCENTER 
+		WHERE ISTEF = #{istef}
+		ORDER BY NAME
+	</select>	
+</mapper>

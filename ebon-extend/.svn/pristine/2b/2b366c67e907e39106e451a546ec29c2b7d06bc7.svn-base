@@ -1,0 +1,103 @@
+package com.ebon.v3.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.ebon.platform.dao.DaoException;
+import com.ebon.platform.dao.pager.Page;
+import com.ebon.platform.service.BaseService;
+import com.ebon.platform.service.ServiceException;
+import com.ebon.v3.dto.VAppUserHours;
+import com.ebon.v3.service.IAppUserHoursService;
+import com.ebon.v3.vo.AppUserHours;
+
+@Service
+public class AppUserHoursService extends BaseService implements IAppUserHoursService {
+	
+	private static String mapperDomain = "com.ebon.v3.appUserHours";
+
+	@Override
+	public String add(AppUserHours appUserHours) throws ServiceException {
+		String code = "0";
+		try {
+			if(this.myBatisDao.save(mapperDomain+".add", appUserHours)){
+				code = "1";
+			}
+		} catch (DaoException e) {
+			log.error("添加工时失败");
+			throw new ServiceException();
+		}
+		return code;
+	}
+
+	@Override
+	public List<VAppUserHours> getVList(VAppUserHours query, Page page) throws ServiceException {
+		List<VAppUserHours> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain+".getVList", query, page);
+		} catch (DaoException e) {
+			log.error("获取任务工时失败");
+			throw new ServiceException();
+		}
+		return list;
+	}
+	
+	@Override
+	public List<AppUserHours> getList(VAppUserHours query) throws ServiceException {
+		List<AppUserHours> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain+".getVList", query);
+		} catch (DaoException e) {
+			log.error("获取任务工时失败");
+			throw new ServiceException();
+		}
+		return list;
+	}
+
+	@Override
+	public String deleteByDate(String userId, String registDate)
+			throws ServiceException {
+		String code = "0";
+		try {
+			Map<String, String> params = new HashMap<String, String>();
+			params.put("userId", userId);
+			params.put("registDate", registDate);
+			if(this.myBatisDao.save(mapperDomain+".deleteByDate", params)){
+				code = "1";
+			}
+		} catch (DaoException e) {
+			log.error("删除该用户这一天的工时失败");
+			throw new ServiceException();
+		}
+		return code;
+	}
+
+	@Override
+	public String update(AppUserHours update) throws ServiceException {
+		String code = "0";
+		try {
+			if(this.myBatisDao.save(mapperDomain+".update", update)){
+				code = "1";
+			}
+		} catch (DaoException e) {
+			log.error("更新工时失败");
+			throw new ServiceException();
+		}
+		return code;
+	}
+
+	@Override
+	public String autoResigt(String userId, String registDate)
+			throws ServiceException {
+		AppUserHours insert = new AppUserHours();
+		insert.setUserId(userId);
+		insert.setRegistDate(registDate);
+		insert.setRegistHours("8");
+		String code = this.add(insert);
+		return code;
+	}
+
+}

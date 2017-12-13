@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.appTaskDoc">
+	<resultMap type="com.ebon.v3.vo.AppTaskDoc" id="voMap">
+		<id property="id" column="ID"/>
+		<result property="name" column="NAME"/>
+		<result property="createUser" column="CREATE_USER"/>
+		<result property="createTime" column="CREATE_TIME"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="taskId" column="TASK_ID"/>
+	</resultMap>
+	
+	<select id="getVList" parameterType="com.ebon.v3.vo.AppTaskDoc" resultMap="voMap">
+		SELECT * FROM APP_TASK_DOC
+		<where>
+			DELETE_FLAG IS NULL
+			<if test="null != taskId and '' != taskId">AND TASK_ID = #{taskId}</if>
+		</where>
+	</select>
+</mapper>

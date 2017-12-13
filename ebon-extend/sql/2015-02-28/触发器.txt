@@ -1,0 +1,35 @@
+
+-- triggers:
+create or replace trigger tri_eai_project
+           after insert or delete or update of proj_short_name,proj_size,PROJ_NAME,PROJ_TYPE,PH1,PH2,proj_pm,CUSTOMER_NO,CUSTOMER,SOP,created_date,CSOP ,CUSTOMER_ABBR,PROJ_STAGE,STATUS,internalOrder on cm_proj 
+           for each row
+
+
+declare
+  nums int;
+
+       begin
+         
+        if deleting then
+          delete from V2_EAI_PROJECT t where t.project_code=:old.PROJ_ID;
+          
+         else
+           
+           select count(*) into nums from V2_EAI_PROJECT t
+              where t.project_code=:new.PROJ_ID and t.editdate=to_date(( select to_char(sysdate,'YYYY/MM/DD') FROM DUAL ),'yyyy/mm/dd');
+              
+            if nums=0 then
+                insert into V2_EAI_PROJECT (PROJECT_CODE,EDITDATE)values(:new.PROJ_ID,to_date(( select to_char(sysdate,'YYYY/MM/DD') FROM DUAL ),'yyyy/mm/dd'));
+            end if;
+
+            if nums>0 then
+                update V2_EAI_PROJECT t set t.project_code=:new.PROJ_ID,t.editdate=to_date(( select to_char(sysdate,'YYYY/MM/DD') FROM DUAL ),'yyyy/mm/dd') where t.project_code=:new.PROJ_ID;
+           end if;
+        end if;
+        
+       end;
+
+	   
+	   
+
+

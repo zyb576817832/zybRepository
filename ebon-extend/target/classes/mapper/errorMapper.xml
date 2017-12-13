@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="errorMapper">
+	<!-- 查询错误信息 -->
+	<select id="getErrorMessage" parameterType="com.ebon.rpc.error.Error" resultType="String">
+		SELECT E.ERROR_MESSAGE FROM RPC_ERRORINFO E 
+		<where>
+				E.STATUS = 1 
+			<if test="errorCode != null">
+				AND E.ERROR_CODE = #{errorCode} 
+			</if>
+			<if test="className != null">
+				AND E.CLASS_NAME = #{className} 
+			</if>
+			<if test="methodName !=null">
+				AND E.METHOD_NAME = #{methodName} 
+			</if>
+		</where>
+	</select>		
+</mapper>

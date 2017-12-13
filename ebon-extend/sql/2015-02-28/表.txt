@@ -1,0 +1,197 @@
+--对表的操作
+--修改之前的表两张
+--新建表一共11张，除了create table的语句,还有primary key的定义
+
+
+
+
+--CM_PROJ增加的两个字段
+
+alter table CM_PROJ add cbu_no varchar2(40);
+alter table CM_PROJ add iscbu char(1) default 0;
+
+--TS_RESOURCEHOUR增加的两个字段
+alter table TS_RESOURCEHOUR add customer_name VARCHAR2(32);
+alter table TS_RESOURCEHOUR add ph2 VARCHAR2(32);
+
+
+--Create table
+
+create table V2_EAI_PROJECTINFO
+(
+  id            VARCHAR2(50) default sys_guid() not null,
+  projectcode   VARCHAR2(50),
+  projectname   VARCHAR2(50),
+  projecttype   VARCHAR2(50),
+  ph1           VARCHAR2(50),
+  ph2           VARCHAR2(50),
+  numberb       VARCHAR2(50),
+  numbero       VARCHAR2(50),
+  projectpm     VARCHAR2(50),
+  customercode  VARCHAR2(50),
+  customername  VARCHAR2(50),
+  sop           DATE,
+  createdate    DATE,
+  csop          VARCHAR2(50),
+  customerabbr  VARCHAR2(50),
+  projectsize   VARCHAR2(50),
+  projectstage  VARCHAR2(50),
+  projectstatus VARCHAR2(50),
+  sapname       VARCHAR2(50),
+  commandid     VARCHAR2(50)
+);
+ 
+  alter table V2_EAI_PROJECTINFO
+  add constraint v2_eai_projectinfo_pk   primary key (ID);
+ 
+
+
+
+-- Create table
+create table V2_EAI_COMMAND
+(
+  id          VARCHAR2(32) not null,
+  type        NUMBER,
+  startdate   VARCHAR2(200),
+  data        BLOB,
+  status      NUMBER,
+  sendedtime  VARCHAR2(200),
+  description VARCHAR2(2000),
+  comments    VARCHAR2(50)
+);
+
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_EAI_COMMAND
+  add constraint V2_COMMAND_ID primary key (ID);
+  
+
+
+-- Create table
+create table V2_EAI_LIMS_PROJECTINFOCOMMAND
+(
+  status      NUMBER,
+  description VARCHAR2(1500),
+  sendeddate  DATE,
+  id          VARCHAR2(32)
+);
+
+
+  
+  
+ 
+ -- Create table
+create table V2_EQUIPMENT
+(
+  id          VARCHAR2(100) default sys_guid() not null,
+  code        VARCHAR2(100),
+  name        VARCHAR2(100),
+  cnname      VARCHAR2(100),
+  description VARCHAR2(100),
+  department  VARCHAR2(100),
+  work_date   VARCHAR2(100),
+  usage_id    VARCHAR2(100)
+);
+
+  
+
+-- Create table
+create table V2_RPT_TIMESHEETITEM
+(
+  id           VARCHAR2(100) default sys_guid() not null,
+  work_date    DATE,
+  employeeid   VARCHAR2(100),
+  projectcode  VARCHAR2(100),
+  work_hours   NUMBER,
+  dept2        VARCHAR2(100),
+  dept3        VARCHAR2(100),
+  dept1        VARCHAR2(100),
+  timesheet_id VARCHAR2(100)
+);
+ 
+  
+  
+  
+  -- Create table
+create table V2_RPT_USAGEITEM
+(
+  id            VARCHAR2(100) default sys_guid() not null,
+  work_date     DATE,
+  equipmentcode VARCHAR2(100),
+  projectcode   VARCHAR2(100),
+  work_hours    NUMBER,
+  rate          NUMBER,
+  usage_id      VARCHAR2(100)
+);
+ 
+
+  
+  
+  
+ -- Create table
+create table V2_TIMESHEET
+(
+  id        VARCHAR2(100) not null,
+  startdate VARCHAR2(100),
+  commandid VARCHAR2(100)
+);
+ 
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_TIMESHEET
+ add constraint TIMESHEET_ID primary key (ID);
+   
+  
+  
+  -- Create table
+create table V2_TIMESHEETITEM
+(
+  id           VARCHAR2(100) default sys_guid() not null,
+  work_date    VARCHAR2(100),
+  employeeid   VARCHAR2(100),
+  projectcode  VARCHAR2(100),
+  work_hours   NUMBER,
+  dept2        VARCHAR2(100),
+  dept3        VARCHAR2(100),
+  dept1        VARCHAR2(100),
+  timesheet_id VARCHAR2(100)
+);
+ 
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_TIMESHEETITEM
+  add constraint TIMESHEETITEM_ID primary key (ID);
+ 
+   
+
+  
+  
+ -- Create table
+create table V2_USAGE
+(
+  id        VARCHAR2(100) not null,
+  startdate VARCHAR2(100),
+  commandid VARCHAR2(100)
+);
+ 
+  
+  
+-- Create table
+create table V2_USAGEITEM
+(
+  id            VARCHAR2(100) default sys_guid() not null,
+  work_date     VARCHAR2(100),
+  equipmentcode VARCHAR2(100),
+  projectcode   VARCHAR2(100),
+  work_hours    NUMBER,
+  rate          NUMBER,
+  usage_id      VARCHAR2(100)
+);
+ 
+	   
+-- Create table
+create table V2_EAI_PROJECT
+(
+  id           VARCHAR2(50) default sys_guid() not null,
+  project_code VARCHAR2(50) not null,
+  editdate     DATE not null
+);
+
+  

@@ -1,0 +1,147 @@
+#main\u9875\u9762\u7684tab\u5b57\u6bb5\u5c5e\u6027
+NEWTASK = New
+ONGOINGTASK = Ongoing
+TABCOMPLETE = Finish
+HOURS = Effort
+MYASSIGN = Assignment
+ALL = All
+
+##task\u4e0b\u7684list\u9875\u9762\u6240\u6709\u5c5e\u6027
+NAME=Task name
+ASSIGN_USER_NAME = Task owner
+RESP_USER_NAME = Task resp
+RESP_DEPT = Resp dept
+PROJECTNO = Proj code
+BASE_START_DATE = Plan start
+BASE_END_DATE = Plan finish
+STATUS = Status
+TASKNAMEANDNAME = Task name\u3001name
+TASKTYPE = Type
+LEVEL = Priority
+SERIOUS = Severity
+BASE_START_DATE1 = Plan start:from
+BASE_START_DATE2 = to
+BASE_END_DATE1 = Plan finish:from
+BASE_END_DATE2 = to
+DEPTHEAD = Dept resp
+##\u7c7b\u578b\u4e0b\u62c9\u6846
+PLANTASK = Plan task
+RISK = Risk
+DECOMPOSE = Sub task
+##\u72b6\u6001\u4e0b\u62c9\u6846
+UNBEGUN = New
+ONGOING = Running
+APPROVAL = Review
+COMPLETE = Finish
+CANCEL = Cancel
+
+#\u9879\u76ee\u6982\u89c8\u9875\u9762
+PROJCODE = Project Number
+PROJSTATUS = Project Status
+PROJCUSTOMER = The customer
+PROJSIZE = Project size
+PROJNAME = Project name
+PROJSTAGE = Stage
+PROJVEHICLE = Vehicle
+PROJENGINE  = The engine
+PROJPM = PM
+PROJSALES = Sales
+PROJTIMELIGHT = Progress
+PROJBUDGETLIGHT = Budget
+PROJCOSTLIGHT = Cost
+PROJQUALITYLIGHT = Quality
+
+#\u57fa\u672c\u9875\u9762
+BASEDETAILS = Task info
+BASEATTRIBUTES = Basic attribute
+BASETYPE = Type
+PARENTUSERTASK = Parent task name
+AGGINFLAG = Reject
+RELEVANTPROPERTIES = Relevant properties
+BASESERIOUS = Severity
+BASELEVEL = Priority
+BASESOURCE = Source
+COMPLETION = Completion status
+ACTSTART = Actual start
+ACTEND = Actual finish
+ACTHOURS = Actual effort
+CHILDTASK = Sub task
+BASERESP = Task resp
+BASEPLANHOURES = Plan effort
+
+#main\u9875\u9762\u7684tab\u5c5e\u6027
+BASE = Task info
+PROJINFO = Proj info
+MILESTONE = Milestone
+DOC = Work product
+CHILDPAGE = Sub task
+TASKHOURS = Task effort
+
+#\u6309\u94ae
+BUTTONAGREE = Get through
+BUTTONCANCEL = Cancel 
+BUTTONACCEPT = Accept
+BUTTONCOMPLETE = Complete
+BUTTONDISAGREE = Reject
+
+#\u91cc\u7a0b\u7891tab
+SYSPROJECT = System project
+CHILDPROJECT = Component project
+MLEVEL = Level
+MNAME = Milestone
+MPLANTIME = Plan date
+MACTTIME = Actual date
+MVERSION = Base line
+MUPDATE = Update
+MADD = Add
+
+#\u4ea4\u4ed8\u7269tab
+DOCADD = Upload
+DOCNAME = Name
+DOCUPTIME = Time
+DOCFILESIZE = Size
+DOCOPERATION = Operation
+DOCCHOOSE = Choose file
+
+#\u4efb\u52a1\u5206\u89e3tab
+DECOADDTASK = Add task
+DECOADD = Add
+DECONAME = Name
+DECOSTATUS = Status
+DECOSTART = Plan date
+DECOFINISH = Plan finish
+DECORESP = Task resp
+DECOORIGINATOR = Task owner
+DECOOPER = Operation
+DECOSTARTIME = Plan start
+DECOSTOPTIME = Plan finish
+DECOHOURS = Plan effort
+
+#\u8ba1\u5212\u5de5\u65f6tab
+HOURSALL = Sum
+HOURSH = effort
+
+#opl\u5386\u53f2\u8bb0\u5f55
+OPLHUPDATETIME = Update time
+OPLHUPDATEUSER = Modifier
+OPLHDESC = Problem desc
+OPLHDEGREE = Severity
+OPLHLEVEL = Priority
+OPLHRESPUSER = Task resp
+OPLHDESCRIBE = Remark
+
+#milestone\u6309\u94ae
+MBUTTONADD = Add
+MBUTTONDELETE = Delete
+MBUTTONUPDATE = Update
+MBUTTONSUBMIT = Submit
+MBUTTONREST = Reset
+MBUTTONSAVE = Save the baseline
+MBUTTONSEARCH = Search
+
+#\u5de5\u65f6\u586b\u62a5
+EFF = Effort
+EFFDESC = Attention\uff1aPlease fill in the actual working time. If the system is not allocated by default for 8 hours, the following can be changed manually only once.
+EFFDATE = Date
+EFFEFFORT = Effort
+EFFDETAIL = Detail

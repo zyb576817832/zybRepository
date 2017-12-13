@@ -1,0 +1,16 @@
+关于LIMS的Webservice乱码问题
+
+修改BaseEaiService.java文件
+133				// 发现LIMS厂商提供的XML数据不是UTF-8格式，这里做一个转化
+134				rst = xml.getBytes("UTF-8");
+
+
+
+修改MainProjectInfoService.java文件
+357		Object obj = services.getGenericServicesSoap(new URL(limsTimesheetWebServiceUrl)).runActionDirect(
+358				"WebServices.UPMS.SyncProjectsToLims", new Object[]{
+359						//new String(data)}, "SYSADM", "LIMS");			//LIMS厂商的字符集为GBK，所以在这里做了一个字符集转换
+360						new String(new String(data, "UTF-8").getBytes("GBK"), "GBK")}, 
+361						limsTimesheetWebServiceUsername, limsTimesheetWebServicePwd);
+362		// services.getGenericServicesSoap().runAction(actionID, parameters);
+

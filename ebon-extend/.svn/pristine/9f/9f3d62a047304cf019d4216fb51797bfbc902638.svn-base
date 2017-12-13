@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="V2Mapper">
+	<!-- 插入命令数据，返回插入的ID -->
+	<insert id="insertCommand" parameterType="com.ebon.v2.eai.base.model.Command">
+		INSERT INTO V2_EAI_COMMAND(
+			ID,
+			TYPE,
+			SYS,
+			<if test="null!=data">DATA,</if>
+			STARTDATE,
+			STATUS,
+			SENDEDTIME
+			<if test="null!=description">, DESCRIPTION</if>
+		)VALUES (
+			#{id},
+			#{type},
+			#{sys},
+			<if test="null!=data">
+				#{data,javaType=byte[], jdbcType=BLOB, typeHandler=org.apache.ibatis.type.BlobTypeHandler},
+			</if>
+			#{startDate},
+			#{status},
+			#{sendedTime}
+			<if test="null!=description">,#{description}</if>
+		)
+	</insert>
+
+	<update id="updateCommand" parameterType="com.ebon.v2.eai.base.model.Command">
+		UPDATE V2_EAI_COMMAND C 
+		SET C.DESCRIPTION = #{description,jdbcType=VARCHAR},
+		C.COMMENTS = #{comments,jdbcType=VARCHAR}
+		<where>
+			C.ID = #{id}
+		</where>
+	</update>
+
+	<resultMap type="com.ebon.v2.eai.base.model.Command" id="commandMap">
+		<result property="id" column="ID" />
+		<result property="type" column="TYPE" />
+		<result property="startDate" column="STARTDATE" />
+		<result property="data" column="DATA" />
+		<result property="status" column="STATUS" />
+		<result property="sendedTime" column="SENDEDTIME" />
+		<result property="description" column="DESCRIPTION" />
+		<result property="comments" column="COMMENTS" />
+	</resultMap>
+
+	<sql id="commandColumns">
+		ID,
+		TYPE,
+		STARTDATE,
+		DATA,
+		STATUS,
+		SENDEDTIME,
+		DESCRIPTION,
+		COMMENTS
+	</sql>
+	<select id="selectCommands" parameterType="hashmap" resultMap="commandMap">
+		SELECT
+		<include refid="commandColumns" />
+		FROM V2_EAI_COMMAND
+	</select>
+	
+	<!-- 通过视图查询每个月需要统计的系统项目里程碑点时间 -->
+	<resultMap type="com.ebon.v2.eai.milestonecpc.model.MilestoneCPC" id="SYSMilestoneCPCMap">
+		<result property="projShortName" column="PROJ_SHORT_NAME"/>
+		<result property="QA1" column="STARTMEETING"/>
+		<result property="QA0" column="QA0"/>
+		<result property="QA3" column="QA3"/>
+		<result property="QA2" column="BATCHSUPPLY"/>
+		<result property="QA4" column="QA4"/>
+	</resultMap>
+	<select id="selectSYSMilestones" resultMap="SYSMilestoneCPCMap">
+		SELECT * FROM v2_v_milestone_sys
+	</select>
+	
+	<!-- 通过视图查询每个月需要统计的子项目里程碑点时间 -->
+	<resultMap type="com.ebon.v2.eai.milestonecpc.model.MilestoneCPC" id="OtherMilestoneCPCMap">
+		<result property="projShortName" column="PROJ_SHORT_NAME"/>
+		<result property="QA1" column="QA1"/>
+		<result property="QA0" column="QA0"/>
+		<result property="QA3" column="QA3"/>
+		<result property="QA2" column="QA2"/>
+		<result property="QA4" column="QA4"/>
+	</resultMap>
+	<select id="selectOtherMilestones" resultMap="OtherMilestoneCPCMap">
+		SELECT * FROM v2_v_milestone_other
+	</select>
+	
+	<!-- 实例化每月同步的里程碑点 -->
+	<insert id="insertMilestoneCPC" parameterType="com.ebon.v2.eai.milestonecpc.model.MilestoneCPC">
+		INSERT INTO V2_MILESTONE_CPC(
+			MONTH,
+			PROJ_SHORT_NAME,
+			QA0,
+			QA1,
+			QA2,
+			QA3,
+			QA4
+		) VALUES (
+			#{month},
+			#{projShortName},
+			<if test="null!=QA0">#{QA0}</if>,
+			<if test="null!=QA1">#{QA1}</if>,
+			<if test="null!=QA2">#{QA2}</if>,
+			<if test="null!=QA3">#{QA3}</if>,
+			<if test="null!=QA4">#{QA4}</if>
+		)
+	</insert>
+	
+	<resultMap type="com.ebon.v2.eai.milestonecpc.model.MilestoneCPC" id="milestoneCPCMap">
+		<result property="projShortName" column="PROJ_SHORT_NAME"/>
+		<result property="QA1" column="QA1"/>
+		<result property="QA0" column="QA0"/>
+		<result property="QA3" column="QA3"/>
+		<result property="QA2" column="QA2"/>
+		<result property="QA4" column="QA4"/>
+		<result property="month" column="MONTH"/>
+	</resultMap>
+	<!-- 根据当前项目得到同步的MilestoneCPC集合 -->
+	<select id="getMilestoneCPCByProj" parameterType="java.util.HashMap" resultMap="milestoneCPCMap">
+		SELECT
+			MONTH,
+			PROJ_SHORT_NAME,
+			to_char(to_date(QA0,'yyyy-MM-dd hh24:mi:ss'),'yyyy/mm/dd') as QA0,
+			to_char(to_date(QA1,'yyyy-MM-dd hh24:mi:ss'),'yyyy/mm/dd') as QA1,
+			to_char(to_date(QA2,'yyyy-MM-dd hh24:mi:ss'),'yyyy/mm/dd') as QA2,
+			to_char(to_date(QA3,'yyyy-MM-dd hh24:mi:ss'),'yyyy/mm/dd') as QA3,
+			to_char(to_date(QA4,'yyyy-MM-dd hh24:mi:ss'),'yyyy/mm/dd') as QA4
+		FROM V2_MILESTONE_CPC WHERE PROJ_SHORT_NAME = #{proj_id}
+		AND MONTH >= #{startMonth}
+		AND MONTH <![CDATA[<=]]> #{endMonth}
+	</select>
+	
+	<!-- 根据项目编号得到项目开始与结束日期 -->
+	<select id="getProjTime" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT 
+		to_char(START_DATE,'YYYY/MM') as startDate,
+		to_char(END_DATE,'YYYY/MM') as endDate
+		FROM CM_PROJ
+		<where>
+			PROJ_NODE_FLAG = 'Y'
+			AND PROJ_SHORT_NAME = #{proj}
+		</where>
+	</select>
+	
+	<!-- 根据项目编号和日期获取设备费用 -->
+	<select id="selectMAD" parameterType="hashmap" resultType="java.lang.String">
+				 select  
+		         to_char(sum(tur.euqipmentAmount)) euqipmentAmount      
+		  from (select work_date,
+		               equipmentcode,
+		               projectcode,
+		               WORK_HOURS,
+		               RATE,
+		               eqName,
+		               eqCnName,
+		               eqDescription,
+		               eqDepartment,
+		               WORK_HOURS * RATE euqipmentAmount,
+		               p.PH2_CODE ph2,
+		               p.customer
+		          from v2_v_rpt_usageitem u
+		          LEFT join V2_V_RPT_PROJECT p  ON u.projectcode = p.PROJ_CODE) tur
+		  join V2_v_Rpt_ALLProject p on tur.projectCode = p.PROJ_CODE
+		  left join V2_V_RPT_PH ph on tur.ph2 = ph.ph2Code
+		  left join V2_V_RPT_CUSTOMER C ON tur.customer = C.id
+		  <where>
+		  
+		 		p.PROJ_CODE = #{proj_code} 
+  
+			  <if test="null!=requestStartDate and requestStartDate!=''">
+			  	and tur.WORK_DATE >= to_date(#{requestStartDate} , 'yyyy/mm/dd')
+			  </if>
+			  <if test="null!=requestEndDate and requestEndDate!=''">
+			  	and tur.WORK_DATE <![CDATA[<]]> to_date(#{requestEndDate} || ' 23:59:59' , 'yyyy/mm/dd hh24:mi:ss')
+			  </if>
+		  
+		  </where>
+  
+		
+	</select>
+	
+
+	
+	<!-- 得到指定项目当前的人工费用 -->
+	<select id="selectEmployee" parameterType="hashmap" resultType="java.lang.String">
+				select 
+		    to_char(sum(tur.employeeAmount)) employeeAmount 
+		    from (SELECT T.userId,
+		                 WORK_DATE,
+		                 projectCode,
+		                 WORK_HOURS,
+		                 ph2,
+		                 customer,
+		                 bu,
+		                 NVL2(MAX(RATE), MAX(RATE), 0) RATE,
+		                 WORK_HOURS * NVL2(MAX(RATE), MAX(RATE), 0) employeeAmount
+		            from V2_V_RPT_TIMESHEETITEM t          
+		            LEFT join (                      
+		                      select USERID,
+		                              uch.fromDate costCenterFromDate,
+		                              uch.toDate   costCenterToDate,
+		                              CR.startDate rateStartDate,
+		                              CR.endDate   rateEndDate,
+		                              RATE
+		                        from V2_V_RPT_COSTCENTER_RATE CR
+		                        join V2_V_RPT_UCH uch on cr.costcenterId = uch.costcenterId                    
+		                      ) UR
+		              ON T.userId = UR.USERID
+		             and t.WORK_DATE >= costCenterFromDate
+		             and t.WORK_DATE <![CDATA[<]]> costCenterToDate
+		             and t.WORK_DATE >= rateStartDate
+		             and t.WORK_DATE <![CDATA[<]]> rateEndDate
+		           GROUP BY T.userId,
+		                    WORK_DATE,
+		                    projectCode,
+		                    WORK_HOURS,
+		                    ph2,
+		                    bu,
+		                    customer) tur
+		  join V2_v_Rpt_ALLProject p on tur.projectCode = p.PROJ_CODE
+		  left join V2_V_RPT_UCH uch on tur.userId = uch.userId and tur.WORK_DATE >= uch.fromDate and tur.WORK_DATE <![CDATA[<]]> uch.toDate
+		  left join CM_COSTCENTER CC ON uch.costcenterId = CC.id
+		  left join V2_V_RPT_PH ph on tur.ph2 = ph.ph2Code
+		  left join V2_V_RPT_CUSTOMER C ON tur.customer = C.id
+		  	  <where>
+		  
+		 		p.PROJ_CODE = #{proj_code} 
+  
+			  <if test="null!=requestStartDate and requestStartDate!=''">
+			  	and tur.WORK_DATE >= to_date(#{requestStartDate} , 'yyyy/mm/dd')
+			  </if>
+			  <if test="null!=requestEndDate and requestEndDate!=''">
+			  	and tur.WORK_DATE <![CDATA[<]]> to_date(#{requestEndDate} || ' 23:59:59' , 'yyyy/mm/dd hh24:mi:ss')
+			  </if>
+		  
+		  </where>
+		  
+	</select>
+	
+	<!-- 得到指定项目当前的三项费用 -->
+	<select id="selectSER" parameterType="hashmap" resultType="java.lang.String">
+				select
+		         to_char(sum(tur.costCOCost)) costCOCost
+		  from (SELECT P.PROJ_SHORT_NAME AS projectCode,
+		               GLACCOUNT,
+		               TRANSACTIONCURRENCY AS costTransationtype,
+		               CC.NAME AS COSTCENTER,
+		               D.DEPT_NAME AS SAP_DEPT_NAME,
+		               D.DEPT_NO AS SAP_DEPT_NO,
+		               vp.PH2_CODE ph2,
+		               vp.CUSTOMER,
+		               POSTINGDATE WORK_DATE,
+		               CASE
+		                 WHEN SC.FLAG = 'S' THEN
+		                  TO_NUMBER(SC.TRANSACTIONVALUE)
+		                 WHEN SC.FLAG = 'H' THEN
+		                  -TO_NUMBER(SC.TRANSACTIONVALUE)
+		               END AS costTransationcost,
+		               CASE
+		                 WHEN SC.FLAG = 'S' THEN
+		                  TO_NUMBER(SC.COVALUE)
+		                 WHEN SC.FLAG = 'H' THEN
+		                  -TO_NUMBER(SC.COVALUE)
+		               END AS costCOCost
+		          FROM FI_SAP_COST SC
+		          LEFT JOIN CM_COSTCENTER CC    ON SC.COSTCENTER = CC.CODE
+		          LEFT JOIN CM_DEPART D   ON CC.DEPT_ID = D.DEPT_NO
+		          LEFT JOIN CM_PROJ P  ON SC.INTERNALORDERNO = P.INTERNALORDER AND P.ORIG_PROJ_ID IS NULL AND P.PROJ_NODE_FLAG='Y'
+		          LEFT JOIN V2_V_RPT_PROJECT VP  ON P.PROJ_SHORT_NAME = VP.PROJ_CODE
+		         WHERE P.PROJ_SHORT_NAME IS NOT NULL
+		        union all
+		        SELECT O.OVERHEAD_CODE AS PROJ_CODE,
+		               GLACCOUNT,
+		               TRANSACTIONCURRENCY AS costTransationtype,
+		               CC.NAME AS COSTCENTER,
+		               D.DEPT_NAME AS SAP_DEPT_NAME,
+		               D.DEPT_NO AS SAP_DEPT_NO,
+		               '' ph2,
+		               '' CUSTOMER,
+		               POSTINGDATE WORK_DATE,
+		               CASE
+		                 WHEN SC.FLAG = 'S' THEN
+		                  TO_NUMBER(SC.TRANSACTIONVALUE)
+		                 WHEN SC.FLAG = 'H' THEN
+		                  -TO_NUMBER(SC.TRANSACTIONVALUE)
+		               END AS TRANSACTIONVALUE,
+		               CASE
+		                 WHEN SC.FLAG = 'S' THEN
+		                  TO_NUMBER(SC.COVALUE)
+		                 WHEN SC.FLAG = 'H' THEN
+		                  -TO_NUMBER(SC.COVALUE)
+		               END AS COVALUE
+		          FROM FI_SAP_COST SC
+		          LEFT JOIN CM_COSTCENTER CC  ON SC.COSTCENTER = CC.CODE
+		          LEFT JOIN CM_DEPART D   ON CC.DEPT_ID = D.DEPT_NO
+		          LEFT JOIN CM_OVERHEAD O   ON SC.INTERNALORDERNO = O.INTERNAL_ORDER
+		         WHERE O.OVERHEAD_CODE IS NOT NULL) tur
+		  join V2_v_Rpt_ALLProject p on tur.projectCode = p.PROJ_CODE
+		  LEFT join V2_V_RPT_PH ph on tur.ph2 = ph.ph2Code
+		  LEFT join V2_V_RPT_CUSTOMER C ON tur.customer = C.id
+		  
+		  <where>
+		  
+		 		p.PROJ_CODE = #{proj_code} 
+  
+			  <if test="null!=requestStartDate and requestStartDate!=''">
+			  	and tur.WORK_DATE >= to_date(#{requestStartDate} , 'yyyy/mm/dd')
+			  </if>
+			  <if test="null!=requestEndDate and requestEndDate!=''">
+			  	and tur.WORK_DATE <![CDATA[<]]> to_date(#{requestEndDate} || ' 23:59:59' , 'yyyy/mm/dd hh24:mi:ss')
+			  </if>
+		  
+		  </where>
+	</select>
+	
+	<insert id="putBudget" parameterType="com.ebon.v2.eai.budget.model.Budget">
+		INSERT INTO V2_BUDGET(
+		PROJ_CODE,
+		PEO,
+		MAD,
+		SER
+		) VALUES(
+		#{proj_code},
+		<if test="null!=PEO">#{PEO},</if>
+		<if test="null!=MAD">#{MAD},</if>
+		<if test="null!=SER">#{SER}</if>
+		)
+	</insert>
+	
+	<!-- 项目CPC项目预算入库操作，每月插入一次 -->
+	<insert id="putBudgetCPC" parameterType="com.ebon.v2.eai.budgetcpc.model.BudgetCPC">
+		INSERT INTO V2_BUDGET_CPC(
+			PROJ_ID,
+			MONTH,
+			BUDGET,
+			MONTHCOST,
+			ACTUALTOTAL
+		)	VALUES(
+			<if test="null!=projId and projId!=''">#{projId},</if>
+			<if test="null!=month and month!=''">#{month},</if>
+			<if test="null!=budget and budget!=''">#{budget},</if>
+			<if test="null!=monthCost and monthCost!=''">#{monthCost},</if>
+			<if test="null!=actualTotal and actualTotal!=''">#{actualTotal}</if>
+		)
+	</insert>
+	
+	<resultMap type="com.ebon.v2.eai.budgetcpc.model.BudgetCPC" id="budgetCPCMap">
+		<result property="month" column="MONTH"/>
+		<result property="budget" column="BUDGET"/>
+		<result property="monthCost" column="MONTHCOST"/>
+		<result property="actualTotal" column="ACTUALTOTAL"/>
+	</resultMap>
+	<!-- 根据项目ID拿到v2_budget_cpc表中的数据 包括系统项目和子项目-->
+	<select id="getBudgetCPC" parameterType="hashmap" resultMap="budgetCPCMap">
+		SELECT MONTH, SUM(BUDGET) AS BUDGET, SUM(MONTHCOST) AS MONTHCOST, SUM(ACTUALTOTAL) AS ACTUALTOTAL FROM V2_BUDGET_CPC
+		<where>
+			PROJ_ID LIKE #{proj_id}
+			AND MONTH <![CDATA[<=]]> #{endMonth}
+			AND MONTH >= #{startMonth}
+			GROUP BY MONTH order by month
+		</where>
+	</select>
+	
+	
+	<!-- 获取V2_BUDGET表中所有项目编号，去掉重复。为每个月同步数据 -->
+	<select id="getAllBudgetProjIds" resultType="java.lang.String">
+		SELECT PROJ_CODE FROM V2_BUDGET GROUP BY PROJ_CODE
+	</select>
+	
+	<!--取得项目最新的预算值  -->
+	<select id="getPlanBudget" resultType="com.ebon.v2.eai.budget.model.Budget" parameterType="java.lang.String">
+		SELECT * FROM V2_BUDGET T
+		<where>
+			AND T.TIME = (
+				SELECT MAX(T1.TIME) FROM V2_BUDGET T1 
+				<where>
+					T1.PROJ_CODE = #{projName}
+				</where>
+			)
+		</where>
+	</select>
+	<!-- 得到系统下的所有子项目名称 -->
+	<select id="getSubproj" resultType="java.lang.String" parameterType="java.lang.String">
+		SELECT PROJ_SHORT_NAME FROM CM_PROJ
+			<where>
+				PROJ_NODE_FLAG = 'Y'
+				AND PRIM_PROJ_ID IS NOT NULL
+				AND PROJ_SHORT_NAME LIKE #{projName}
+			</where>
+	</select>
+	
+	<!-- 根据项目ID得到项目名称 -->
+	<select id="getNameById" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT PROJ_SHORT_NAME FROM CM_PROJ
+			<where>
+				PROJ_ID = #{projId}
+			</where>
+	</select>
+	
+	
+	<!--获取符合条件的项目集 -->
+	<!--此处很多地方得到的是ID号，需要关联多个地方显示对应的值 -->
+	<resultMap type="com.ebon.v2.eai.lims.model.ProjectInfo" id="projectMap">
+		<result property="projectCode" column="PROJECTCODE" />
+		<result property="projectName" column="PROJ_NAME" />
+		<result property="projectType" column="PROJ_TYPE" />
+		<result property="ph1" column="PH1" />
+		<result property="ph2" column="PH2" />
+		<result property="projectPm" column="proj_pm" />
+		<result property="customerCode" column="CUSTOMERCODE" />
+		<result property="customerName" column="CUSTOMER" />
+		<result property="SOP" column="SOP" />
+		<result property="createDate" column="created_date" />
+		<result property="CSOP" column="CSOP" />
+		<result property="customerABBR" column="CUSTOMER_ABBR" />
+		<result property="projectSize" column="PROJ_SIZE" />
+		<result property="projectStage" column="PROJ_STAGE" />
+		<result property="projectStatus" column="STATUS" />
+		<result property="internalOrder" column="INTERNALORDER" />
+	</resultMap>
+
+	<sql id="projectColumns">
+		NVL(PROJ_SHORT_NAME,'') as PROJECTCODE,
+		NVL(PROJ_NAME,'') AS PROJ_NAME,
+		NVL(PROJ_SYS_TYPE,'') AS PROJ_TYPE,
+		<!-- 应LIMS厂商要求，将C_TYPE.CODE_NAME改为PROJ_SYS_TYPE -->
+		NVL(PHT.ENAME ,'') AS PH1,
+		NVL(PH.ENAME ,'') AS PH2,
+		NVL(U.USER_NAME,'') AS PROJ_PM,
+		NVL(CUSTOMER_NO,'') AS CUSTOMERCODE,
+		NVL(CU.COMPANY_NAME_CN,'') AS CUSTOMER,
+		SOP,
+		P.created_date,
+		NVL(CSOP,'') AS CSOP,
+		NVL(CUSTOMER_ABBR,'') AS CUSTOMER_ABBR,
+		NVL(C_SIZE.CODE_NAME,'') AS PROJ_SIZE,
+		NVL(C_STAGE.CODE_NAME,'') AS PROJ_STAGE,
+		NVL(INTERNALORDER,'') AS INTERNALORDER,
+		NVL(C_STATUS.CODE_NAME,'') AS STATUS
+	</sql>
+	
+	<select id="selectProjects" resultMap="projectMap">
+		SELECT
+		<include refid="projectColumns" />
+		FROM CM_PROJ P
+		LEFT JOIN CM_PH PH ON P.PH2 = PH.PH_ID
+		LEFT JOIN CM_PH PHT ON PH.PARENT_ID = PHT.PH_ID
+		LEFT JOIN CM_CUSTOMER CU ON CU.CUSTOMER_ID=P.CUSTOMER
+		LEFT JOIN CM_USERS U ON P.PROJ_PM = U.USER_ID <!-- modify by wujie 20150929 -->
+		LEFT JOIN CM_CODE C_STAGE ON P.PROJ_STAGE = C_STAGE.ID AND	C_STAGE.CODE_TYPE = 'PROJ_STAGE'
+		LEFT JOIN CM_CODE C_SIZE ON P.PROJ_SIZE = C_SIZE.ID AND C_SIZE.CODE_TYPE =	'PROJ_SIZE'
+		LEFT JOIN CM_CODE C_STATUS ON P.STATUS = C_STATUS.ID AND	C_STATUS.CODE_TYPE = 'PROJ_STATUS'
+		LEFT JOIN CM_CODE C_TYPE ON P.PROJ_TYPE = C_TYPE.ID AND C_TYPE.CODE_TYPE =	'PROJ_TYPE'
+		<where>
+			P.ORIG_PROJ_ID IS NULL
+			AND P.PROJ_SYS_TYPE != 'SYS'
+			AND P.PROJ_NODE_FLAG = 'Y'
+			AND P.PROJ_ID IN
+			(
+			select p.project_code from V2_EAI_PROJECT p
+			WHERE P.EDITDATE >= (
+			SELECT
+			NVL2(
+				MAX(SENDEDDATE),
+				TO_DATE(TO_CHAR(MAX(SENDEDDATE),'yyyy/mm/dd'),'yyyy/mm/dd'),
+				TO_DATE('2000/1/1','yyyy/mm/dd'))
+			FROM V2_EAI_LIMS_PROJECTINFOCOMMAND where STATUS=1 )
+			)
+		</where>
+	</select>
+
+	<select id="selectAllProjects" resultMap="projectMap">
+		SELECT
+		<include refid="projectColumns" />
+		FROM CM_PROJ P
+		LEFT JOIN CM_PH PH ON P.PH2 = PH.PH_ID
+		LEFT JOIN CM_PH PHT ON PH.PARENT_ID = PHT.PH_ID
+		LEFT JOIN CM_CUSTOMER CU ON CU.CUSTOMER_ID=P.CUSTOMER
+		JOIN CM_USERS U ON P.PROJ_PM = U.USER_ID
+		LEFT JOIN CM_CODE C_STAGE ON P.PROJ_STAGE = C_STAGE.ID AND	C_STAGE.CODE_TYPE = 'PROJ_STAGE'
+		LEFT JOIN CM_CODE C_SIZE ON P.PROJ_SIZE = C_SIZE.ID AND C_SIZE.CODE_TYPE =	'PROJ_SIZE'
+		LEFT JOIN CM_CODE C_STATUS ON P.STATUS = C_STATUS.ID AND C_STATUS.CODE_TYPE = 'PROJ_STATUS'
+		LEFT JOIN CM_CODE C_TYPE ON P.PROJ_TYPE = C_TYPE.ID AND C_TYPE.CODE_TYPE = 'PROJ_TYPE'
+		<where>
+			P.ORIG_PROJ_ID IS NULL
+			AND P.PROJ_SYS_TYPE != 'SYS'
+			AND P.PROJ_NODE_FLAG = 'Y'
+		</where>
+	</select>
+	
+
+
+	
+
+
+	<select id="selectProjectInfoes" resultMap="projectMap">
+		SELECT
+		<include refid="projectColumns" />
+		FROM CM_PROJ P
+		LEFT JOIN CM_PH PH ON P.PH2 = PH.PH_ID
+		LEFT JOIN CM_PH PHT ON PH.PARENT_ID = PHT.PH_ID
+		LEFT JOIN CM_CUSTOMER CU ON CU.CUSTOMER_ID=P.CUSTOMER
+		JOIN CM_USERS U ON P.PROJ_PM = U.USER_ID
+		LEFT JOIN CM_CODE C_STAGE ON P.PROJ_STAGE = C_STAGE.ID AND C_STAGE.CODE_TYPE = 'PROJ_STAGE'
+		LEFT JOIN CM_CODE C_SIZE ON P.PROJ_SIZE = C_SIZE.ID AND C_SIZE.CODE_TYPE = 'PROJ_SIZE'
+		LEFT JOIN CM_CODE C_STATUS ON P.STATUS = C_STATUS.ID AND C_STATUS.CODE_TYPE = 'PROJ_STATUS'
+		LEFT JOIN CM_CODE C_TYPE ON P.PROJ_TYPE = C_TYPE.ID AND C_TYPE.CODE_TYPE = 'PROJ_TYPE'
+		<where>
+			P.ORIG_PROJ_ID IS NULL
+			AND P.PROJ_SYS_TYPE != 'SYS'
+			AND P.PROJ_NODE_FLAG = 'Y'
+			AND P.PROJ_SHORT_NAME IN
+			(
+			<foreach collection="list" item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+			)
+		</where>
+	</select>
+
+
+	<!-- 插入最近同步时间的记录 -->
+	<insert id="insertProjectInfoCommand" parameterType="com.ebon.v2.eai.lims.model.ProjectInfoCommand">
+		INSERT INTO V2_EAI_LIMS_PROJECTINFOCOMMAND (
+			ID,
+			STATUS
+			<if test="null!=description">,DESCRIPTION</if>
+			,SENDEDDATE
+		)VALUES (
+			#{id},
+			#{status}
+			<if test="null!=description">,#{description} </if>
+			,SYSDATE
+		)
+	</insert>
+
+	<!-- 持久化projectInfo的信息-->
+	<insert id="insertProjectInfo" parameterType="java.util.List">
+		INSERT INTO V2_EAI_PROJECTINFO (
+				projectCode,
+				projectName,
+				projectType,
+				ph1,
+				ph2,
+				numberB,
+				numberO,
+				projectPm,
+				customerCode,
+				customerName,
+				SOP,
+				createDate,
+				CSOP,
+				customerABBR,
+				projectSize,
+				projectStage,
+				projectStatus,
+				sapName,	
+				commandId
+	    )<foreach collection="list" item="item" index="index" separator=" union all ">	
+	    SELECT
+	    	${item.projectCode,jdbcType=VARCHAR}, 
+	    	${item.projectName,jdbcType=VARCHAR},  
+	    	${item.projectType,jdbcType=VARCHAR},  
+	    	${item.ph1,jdbcType=VARCHAR},  
+	    	${item.ph2,jdbcType=VARCHAR},  
+	    	${item.numberB,jdbcType=VARCHAR},  
+	    	${item.numberO,jdbcType=VARCHAR},  
+	    	${item.projectPm,jdbcType=VARCHAR},  
+	    	${item.customerCode,jdbcType=VARCHAR},  
+	    	${item.customerName,jdbcType=VARCHAR}, 
+	    	#{item.SOP,jdbcType=DATE},
+	    	#{item.createDate,jdbcType=DATE}, 
+	    	${item.CSOP,jdbcType=VARCHAR},  
+	    	${item.customerABBR,jdbcType=VARCHAR},  
+	    	${item.projectSize,jdbcType=VARCHAR},  
+	    	${item.projectStage,jdbcType=VARCHAR},  
+	    	${item.projectStatus,jdbcType=VARCHAR},  
+	    	${item.sapName,jdbcType=VARCHAR},   
+	    	${item.projectInfoCommandId}   
+	      FROM DUAL
+	    </foreach>   
+	</insert>
+
+	<!-- 插入人员报工信息 -->
+	<insert id="insertTimesheet" parameterType="com.ebon.v2.eai.ucs.model.Timesheet">
+		INSERT INTO
+			V2_TIMESHEET (
+			ID,
+			STARTDATE,
+			COMMANDID
+		)VALUES (
+			#{id},
+			#{startDate,jdbcType=DATE},
+			#{commandId}
+		)
+	</insert>
+
+	<!-- 插入人员报工信息 -->
+	<insert id="insertTimesheetItem" parameterType="com.ebon.v2.eai.ucs.model.TimesheetItem">
+		INSERT INTO V2_TIMESHEETITEM (
+			PROJECTCODE,
+			EMPLOYEEID,
+			WORK_DATE,
+			WORK_HOURS,
+			DEPT1,
+			DEPT2,
+			DEPT3,
+			TIMESHEET_ID
+		) values (
+			#{projectCode},
+			#{employeeId},
+			#{date},
+			#{hours},
+			#{dept1},
+			#{dept2},
+			#{dept3},
+			#{timesheetId}
+		)
+	</insert>
+
+	<!-- 删除 - 人员报工信息 - 主数据表数据 -->
+	<delete id="delTimesheetByStartDate" parameterType="string">
+		DELETE FROM V2_RPT_TIMESHEETITEM WHERE WORK_DATE >=	to_date(#{startDate},'yyyy-MM-dd')
+	</delete>
+	<!-- 插入人员报工信息 -->
+	<insert id="insertRptTimesheetItem" parameterType="com.ebon.v2.eai.ucs.model.TimesheetItem">
+		INSERT INTO V2_RPT_TIMESHEETITEM (
+			PROJECTCODE,
+			EMPLOYEEID,
+			WORK_DATE,
+			WORK_HOURS,
+			DEPT1,
+			DEPT2,
+			DEPT3,
+			TIMESHEET_ID
+		) values (
+			#{projectCode},
+			#{employeeId},
+			to_date(#{date},'yyyy-MM-dd'),
+			#{hours},
+			#{dept1},
+			#{dept2},
+			#{dept3},
+			#{timesheetId}
+		)
+	</insert>
+
+	<!-- 插入同步设备报工指令 -->
+	<insert id="insertUsage" parameterType="com.ebon.v2.eai.lims.model.Usage">
+		INSERT INTO V2_USAGE (
+			ID,
+			STARTDATE,
+			COMMANDID
+		)VALUES (
+			#{id},
+			#{startDate},
+			#{commandId}
+		)
+	</insert>
+
+	<!-- 插入设备报工信息 -->
+	<insert id="insertUsageItems" parameterType="java.util.List">
+		INSERT INTO V2_USAGEITEM (
+			PROJECTCODE,
+			EQUIPMENTCODE,
+			WORK_DATE,
+			WORK_HOURS,
+			RATE,
+			USAGE_ID
+		)
+		<foreach collection="list" item="item" index="index" separator=" union all ">
+		select
+			#{item.projectCode,jdbcType=VARCHAR},
+			#{item.equipmentCode,jdbcType=VARCHAR},
+			#{item.date,jdbcType=VARCHAR},
+			#{item.hours,jdbcType=VARCHAR},
+			#{item.rate,jdbcType=VARCHAR},
+			#{item.usageId}
+		FROM DUAL
+		</foreach>
+	</insert>
+
+	<!-- 插入设备信息 -->
+	<insert id="insertEquipments" parameterType="java.util.List">
+		INSERT INTO V2_EQUIPMENT(
+			CODE,
+			NAME,
+			CNNAME,
+			DESCRIPTION,
+			DEPARTMENT,
+			WORK_DATE,
+			USAGE_ID
+		)
+		<foreach collection="list" item="item" index="index" separator=" UNION ALL ">
+		select 
+			#{item.code,jdbcType=VARCHAR},
+			#{item.name,jdbcType=VARCHAR},
+			#{item.cnName,jdbcType=VARCHAR},
+			#{item.description,jdbcType=VARCHAR},
+			#{item.department,jdbcType=VARCHAR},
+			#{item.date},
+			#{item.usageId}
+		from dual
+		</foreach>
+	</insert>
+
+	<!-- 删除 - 设备报工信息 - 主数据表数据 -->
+	<delete id="delUsageItemByStartDate" parameterType="string">
+		DELETE FROM V2_RPT_USAGEITEM WHERE WORK_DATE >= to_date(#{startDate},'yyyy-MM-dd')
+	</delete>
+	
+	<!-- 插入设备报工信息 -->
+	<insert id="insertRptUsageItems" parameterType="java.util.List">
+		INSERT INTO V2_RPT_USAGEITEM (
+			PROJECTCODE,
+			EQUIPMENTCODE,
+			WORK_DATE,
+			WORK_HOURS,
+			RATE,
+			USAGE_ID
+		)
+		<foreach collection="list" item="item" index="index" separator=" union all ">
+		select
+			#{item.projectCode,jdbcType=VARCHAR},
+			#{item.equipmentCode,jdbcType=VARCHAR},
+			to_date(#{item.date},'yyyy-MM-dd'),
+			#{item.hours},
+			#{item.rate},
+			#{item.usageId}
+		FROM DUAL
+		</foreach>
+	</insert>
+</mapper>

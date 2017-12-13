@@ -1,0 +1,124 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/common/meta1.jsp"%>
+<html>
+<head>
+<title>子任务列表页面</title>
+<script type="text/javascript" src="${path}/v3/util.js"></script>
+<script type="text/javascript">
+	function formatterCZ(value, row, index){
+		var s = '<a href="#" onclick="javascript:deleteTask(\''+ row.ID +'\' )">删除</a>'
+		/* var s = '<img src=\"${path }/themes/easyui1.3.2/icons/cancel.png\" onclick="javascript:deleteTask(\''+ row.ID +'\' )"/>'; */
+		return s;
+	}
+	function deleteTask(rowId){
+		$.post('${path}/app/userTaskPlatfrom/delete.action?userId=${userId}&id=' + rowId, function(data){
+			$.messager.alert('提示','操作成功');
+			 tableReload();
+		},'json');
+	}
+	
+	function submitForm(){
+		var url = '${path }/app/userTaskPlatfrom/insertChild.action?';
+		$.post(url,$('#ff').serialize(), function(data){
+			$.messager.alert('提示','操作成功');
+			$('#w').window('close');
+	    	tableReload();
+	    	parent.parentTableReload();//主任务列表
+		},'json');
+	}
+	
+	function tableReload(){
+		//$('#dg').datagrid('load');
+		var ranNumber=Math.random(); //IE缓存
+		$('#dg').datagrid('load', {    
+			ranNumber: ranNumber  
+		});
+	}
+	
+	function clearForm(){
+		$('#ff').form('clear');
+	}
+	
+	$(function(){
+		//选人注册change事件
+		$('#respUser').combobox({
+			onChange : loadDataBySearchFn
+			//onSelect : onSelectFn
+		});
+	});
+	
+	function onSelectFn(data){
+		try{
+			$('#respUser').combobox('setText',data.actualName);
+			$('#respUser').combobox('setValue',data.employeeId);
+		}catch(e){
+			
+		}
+	}
+	
+	function loadDataBySearchFn(newValue, oldValue){
+		if(newValue&&newValue.length!=32){
+			$('#respUser').combobox({
+				 url:'${path}/app/userTaskPlatfrom/getComboListBySearch.action?search=' + newValue,    
+				 valueField:'employeeId',    
+				 textField:'actualName'   
+			});
+		}
+	}
+</script>
+</head>
+<body>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'north'" style="height:35px;">
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#w').window('open')">添加</a>
+		</div>
+		<div id="w" class="easyui-window" data-options="closed:true" title="新建分解任务" style="width:400px;height:300px;top: 10px;">
+			<form id=ff method="post">
+				<input name="parentId" value="${taskId}" type="hidden">
+				<input name="userId" value="${userId}" type="hidden">
+				<table>
+					<tr>
+						<td>分解任务名称</td>
+						<td><input class="easyui-validatebox" name="name" data-options="required:true""></td>
+					</tr>
+					<tr>
+						<td>计划工时</td>
+						<td><input class="easyui-validatebox" name="planHours" data-options="required:true"></td>
+					</tr>
+					<tr>
+						<td>责任人</td>
+						<td><input id="respUser" class="easyui-combobox" name="respUser" data-options="required:true" data-options="valueField:'employeeId',textField:'actualName'"></td>
+					</tr>
+					<tr>
+						<td>任务开始时间</td>
+						<td><input class="easyui-datebox" name="baseStartDate" data-options="required:true"></td>
+					</tr>
+					<tr>
+						<td>任务结束时间</td>
+						<td><input class="easyui-datebox" name="baseEndDate" data-options="required:true"></td>
+					</tr>
+				</table>
+			</form>
+			 <div style="text-align:center;padding:5px 0">
+				<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" >Submit</a>
+				<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" >Clear</a>
+				</div>
+		</div>
+		<div data-options="region:'center'">
+			<table id="dg" class="easyui-datagrid"
+				data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&parentId=${taskId}',method:'get',border:false,singleSelect:true,fit:true,fitColumns:true,rownumbers:true,pagination:true">
+				<thead>
+					<tr>
+						<th data-options="field:'NAME'" width="20%">分解任务名称</th>
+						<th data-options="field:'STATUS',formatter:formatterStatusFn" width="10%" sortable="true">状态</th>
+						<th data-options="field:'BASE_START_DATE',align:'center', formatter:formatterBaseDateFn" width="20%" sortable="true">要求起止时间</th>
+						<th data-options="field:'RESP_USER_NAME',align:'center'" width="35%" sortable="true">责任人</th>
+						<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="35%" sortable="true">发起人</th>
+						<th data-options="field:'1',align:'center',formatter:formatterCZ" width="10%" sortable="true">操作</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

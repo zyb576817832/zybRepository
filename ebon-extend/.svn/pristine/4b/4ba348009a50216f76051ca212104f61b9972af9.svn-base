@@ -1,0 +1,256 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ include file="/common/meta1.jsp"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>主项目里程碑列表</title>
+<script type="text/javascript">
+	/*js方式动态生成下拉框*/
+	$(function(){
+		$('#cc').combobox({
+		    url:'${path }/app/mileStone/initCombox?projId=${projId }&comboxCache='+new Date().getTime(),
+		    valueField:'id',
+		    textField:'text'
+		    
+		});
+	});
+	
+	/* 添加里程碑 */
+	function submitForm(){
+		$('#ff').form('submit',{
+			url: '${path}/app/mileStone/add.action?projId=${projId}&createUser=${userId}',
+			onSubmit: function(){
+				return $(this).form('validate');
+			},
+			success: function(data){
+				var result = eval('('+data+')');
+				if (result.code=='0'){
+					$.messager.alert('提示','操作失败');
+				} else {
+					$.messager.alert('提示','操作成功');
+					$('#dlg').dialog('close');// 关闭选择对话框
+					tableReload();
+				}
+			}
+		});
+	}
+	function clearForm(){
+		$('#ff').form('clear');
+	}
+	/* 删除里程碑 */
+	function mileStoneDelete(){
+		var row = $('#dg').datagrid('getSelected');//获取选中行
+		if(row){
+			$.messager.confirm('删除','确认删除该里程碑么?',function(r){
+				if (r){
+					$.post('${path}/app/mileStone/delete?',{id:row.ID},function(result){
+						$.messager.alert('提示','操作成功');
+						tableReload();
+					},'json');
+				}
+			});
+		}
+	}
+	/* 刷新表格 */
+	function tableReload(){	
+		//解决由于url没有改变的缓存问题
+		var url = $('#dg').datagrid('options').url;  
+		if (url.indexOf("_t=") > 0) {  
+		    url = url.replace(/_t=\d+/, "_t=" + new Date().getTime());  
+		} else {  
+		    url = url.indexOf("?") > 0  
+		        ? url + "&_t=" + new Date().getTime()  
+		        : url + "?_t=" + new Date().getTime();  
+		}
+		$('#dg').datagrid({    
+		    url:url  
+		});  
+	}
+	
+	/* 保存基线 */
+	function saveBaseLine(){
+			$.messager.confirm('保存基线','确认更新基线么?',function(r){
+				if (r){
+					$.post('${path}/app/mileStone/save?',{'projId':'${projId}'},function(result){
+						$.messager.alert('提示','操作成功');
+						$('#cc').combobox('reload');//动态刷新该下拉框
+						tableReload();
+					},'json');
+				}
+			});
+	}
+	
+	function queryData(){ 
+		
+		var v = $("#cc").combobox('getValue');
+		$.post('${path}/app/mileStone/initCombox?',{projId:'${projId}'},function(data){
+			if(v != data.length){
+		       	 $.post('${path}/app/mileStone/getListData?',{projId:'${projId}',version:v},function(data){
+		        	 if (data) { $("#dg").datagrid('loadData', data); }; 
+		         },'json');  
+		        	 $(".perssionClass").css("visibility","hidden");
+			}else{
+				 $.post('${path}/app/mileStone/getListData?',{projId:'${projId}'},function(data){
+		        	 if (data) { $("#dg").datagrid('loadData', data); }; 
+		        	 $(".perssionClass").css("visibility","visible");
+		         },'json');  
+			}
+        },'json');
+	}
+	
+	function openDialog(){
+		$('#dlg').dialog('open');
+		$('#addName').val('');
+		$('#addPlanTime').datebox('setValue', '');
+		$('#addActTime').datebox('setValue', '');
+	}
+	
+	function edit(){
+		var row = $('#dg').datagrid('getSelected');//获取选中行
+		
+		if(!row){
+			$.messager.alert('提示','未选中行');
+			return;
+		}
+		$('#dlg1').dialog('open');
+		$('#name').val(row.NAME);
+		$('#id').val(row.ID);
+		$('#planTime').datebox('setValue', row.PLAN_TIME);
+		$('#actTime').datebox('setValue', row.ACT_TIME);
+	}
+	
+	function submitForm1(){
+		$('#fff').form('submit',{
+			url: '${path}/app/mileStone/edit?',
+			onSubmit: function(){
+				return $(this).form('validate');
+			},
+			success: function(data){
+				var result = eval('('+data+')');
+				if (result.code=='0'){
+					$.messager.alert('提示','更新失败');
+				} else {
+					$.messager.alert('提示','更新成功');
+					$('#dlg1').dialog('close');// 关闭选择对话框
+					tableReload();
+				}
+			}
+		});
+	}
+	/*导出*/
+	function exportExcel(){
+		
+		var v = $("#cc").combobox('getValue');
+	    var maxm = "";
+	    $.ajax({
+	    	url:'${path}/app/mileStone/initCombox?projId=${projId}',
+	    	dataType:'json',
+	    	async : false,
+	    	type:'post',
+	    	success: function(data){
+	    		
+	    		maxm = data.length;
+	    	}
+	    });
+	   
+		if(v== maxm){
+			$("#exportVersion").val('');
+		}else{
+			$("#exportVersion").val(v);
+		}
+		$("#export").submit();
+	}
+</script>
+</head>
+<body style="padding-top: 0px">
+	
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:30px;">
+			<a href="#" class="easyui-linkbutton perssionClass" onclick="openDialog();">新增</a>
+			<a href="#" class="easyui-linkbutton perssionClass" onclick="edit()">修改</a>
+			<a href="#" class="easyui-linkbutton perssionClass" onclick="mileStoneDelete()">删除</a>
+			<a href="#" class="easyui-linkbutton perssionClass" onclick="saveBaseLine()">保存基线</a>
+	   		<input id="cc" class="easyui-combobox"   value="无版本" >
+	   		<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'"  onclick="queryData()">查询</a>
+	   		<a href="#" class="easyui-linkbutton" onclick="exportExcel('${projId}')">导出</a>
+		</div>
+		
+		<div data-options="region:'center',border:false">
+			<table id="dg"  class="easyui-datagrid" 
+							style="height: 200px"
+				            data-options="fit:true,singleSelect:true,collapsible:true,method:'get',url:'${path }/app/mileStone/getListData.action?projId=${projId }&randomNum=${randomNum }'"
+				            rownumbers="true"
+							pagination="true"
+							fitColumns="true">
+		        <thead>
+		            <tr>
+			            <th data-options="field:'M_LEVEL',width: 10" sortable="true">级别</th>
+						<th data-options="field:'NAME',width:40 " sortable="true">里程碑名称</th>
+						<th data-options="field:'PLAN_TIME',width:20" sortable="true">计划时间</th>
+						<th data-options="field:'ACT_TIME',width:20 " sortable="true">实际时间</th>
+						<th data-options="field:'VERSION',width:10 " sortable="true">版本</th>
+		            </tr>
+		        </thead> 
+		    </table>
+   		 </div>
+	</div>
+					
+    <div id="dlg" class="easyui-dialog" title="新增里程碑" data-options="closed:true" style="width:450px;height:260px;padding:10px;left:20px;top:30px">
+		<div class="easyui-panel" style="width:400px">
+			<div style="margin:0 auto">
+			    <form id="ff" method="post">
+			    	<table cellpadding="5">
+			    		<tr>
+			    			<td><font style="display:inline-block;width:100px">里程碑名称：</font><input id="addName"  class="easyui-validatebox" style="width:280px" data-options="required:true"  name="name" ></input></td>
+			    		</tr>
+			    		<tr>
+			    			<td><font style="display:inline-block;width:100px">计划时间：</font><input id="addPlanTime"  class="easyui-datebox" style="width:280px" data-options="required:true" name="planTime"></input></td>
+			    		</tr>
+			    		<tr>
+			    			<td><font style="display:inline-block;width:100px">实际时间：</font><input id="addActTime" class="easyui-datebox" style="width:280px" name="actTime"></input></td>
+			    		</tr>
+			    	</table>
+			    </form>
+			    <div style="text-align:center;padding:5px">
+			    	<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()">提交</a>
+			    	<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()">重置</a>
+			    </div>
+		    </div>
+		</div>
+	</div>
+	
+	<div id="dlg1" class="easyui-dialog" title="修改里程碑" data-options="closed:true" style="width:450px;height:260px;padding:10px;left:20px;top:30px">
+		<div class="easyui-panel" style="width:400px">
+			<div style="margin:0 auto">
+			    <form id="fff" method="post">
+			    	<table cellpadding="5">
+			    		<tr>
+			    			<td><font style="display:inline-block;width:100px">里程碑名称：</font><input id="name"  class="easyui-validatebox" style="width:280px" data-options="required:true"  name="name" ></input></td>
+			    		</tr>
+			    		<tr>
+			    			<td><font style="display:inline-block;width:100px">计划时间：</font><input id="planTime" class="easyui-datebox" style="width:280px" data-options="required:true" name="planTime"></input></td>
+			    		</tr>
+			    		<tr>
+			    			<td><font style="display:inline-block;width:100px">实际时间：</font><input id="actTime" class="easyui-datebox" style="width:280px" name="actTime"></input></td>
+			    			<input type="hidden" name="id" id="id">
+			    			<input type="hidden" name="updateUser" value="${userId }">
+			    		</tr>
+			    	</table>
+			    </form>
+			    <div style="text-align:center;padding:5px">
+			    	<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm1()">提交</a>
+			    	<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()">重置</a>
+			    </div>
+		    </div>
+		</div>
+	</div>
+	
+	<form id="export" action="${path }/app/mileStone/export.action">
+		<input type="hidden" name="projId" value="${projId }">
+		<input id="exportVersion" type="hidden" name="version">
+	</form>
+</body>
+</html>

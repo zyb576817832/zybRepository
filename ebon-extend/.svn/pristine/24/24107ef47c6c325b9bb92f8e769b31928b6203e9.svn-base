@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.appUserTaskPlatform">
+	<resultMap type="com.ebon.v3.dto.VAppUserTaskPlatfrom" id="dtoMap">
+		<id property="id" column="ID"/>
+		<result property="name" column="NAME"/>
+		<result property="type" column="TYPE"/>
+		<result property="status" column="STATUS"/>
+		<result property="source" column="SOURCE"/>
+		<result property="projId" column="PROJ_ID"/>
+		<result property="OPLId" column="OPL_ID"/>
+		<result property="baseStartDate" column="BASE_START_DATE"/>
+		<result property="baseEndDate" column="BASE_END_DATE"/>
+		<result property="actStartDate" column="ACT_START_DATE"/>
+		<result property="actEndDate" column="ACT_END_DATE"/>
+		<result property="planHours" column="PLAN_HOURS"/>
+		<result property="assginUser" column="ASSIGN_USER"/>
+		<result property="assginDept" column="ASSIGN_DEPT"/>
+		<result property="respUser" column="RESP_USER"/>
+		<result property="respDept" column="RESP_DEPT"/>
+		<result property="agginFlag" column="APP_AGAIN_FLAG"/>
+		<result property="parentId" column="PARENT_ID"/>
+		<result property="name" column="DEPT_NAME"/>
+		<result property="childSum" column="CHILD_SUM"/>
+		<result property="childUndo" column="CHILD_DOUE"/>
+		<result property="createTime" column="CREATE_TIME"/>
+		<result property="createUser" column="CREATE_USER"/>
+		<result property="updateTime" column="UPDATE_TIME"/>
+		<result property="updateUser" column="UPDATE_USER"/>
+		<result property="deleteFlag" column="DELETE_FLAG"/>
+		<result property="isLeader" column="IS_LEADER"/>
+		
+		<result property="assignUserName" column="ASSIGN_USER_NAME"/>
+		<result property="respUserName" column="RESP_USER_NAME"/>
+		<result property="actHours" column="ACT_HOURS"/>
+		<result property="projCode" column="PROJ_CODE"/>
+		<result property="serious" column="SERIOUS"/>
+		<result property="seriousName" column="SERIOUS_NAME"/>
+		<result property="priority" column="PRIORITY"/>
+		<result property="priorityName" column="PRIORITY_NAME"/>
+		<result property="deptNo" column="DEPT_NO"/>
+		<result property="deptName" column="DEPT_NAME"/>
+		<result property="parentName" column="PARENT_NAME"/>
+	</resultMap>
+	
+	<sql id="columnsDto">
+		<include refid="columnsVo"/>,
+		ASSIGN_USER_NAME,
+		RESP_USER_NAME,
+		ACT_HOURS,
+		PROJ_CODE,
+		SERIOUS_NAME,
+		PRIORITY_NAME,
+		PARENT_NAME
+	</sql>
+	
+	<select id="getAllByUserId" parameterType="com.ebon.v3.dto.VAppUserTaskPlatfrom" resultMap="dtoMap">
+		SELECT <include refid="columnsDto"/>
+		FROM V_APP_USER_TASK_PLATFROM
+		<where>
+		 	DELETE_FLAG IS NULL
+			<if test="null != userId and '' != userId">
+			AND	(ASSIGN_USER = #{userId}
+				OR RESP_USER = #{userId})
+			</if>
+			<if test="null != id and '' != id">AND ID = #{id}</if>
+			<if test="null != name and '' != name">AND NAME = #{name}</if>
+			<if test="null != type and '' != type">AND TYPE = #{type}</if>
+			<if test="null != status and '' != status">AND STATUS = #{status}</if>
+			<if test="null != source and '' != source">AND SOURCE = #{source}</if>
+			<if test="null != projId and '' != projId">AND PROJ_ID = #{projId}</if>
+			<if test="null != OPLId and '' != OPLId">AND OPL_ID = #{OPLId}</if>
+			
+			<if test="null != baseStartDate and '' != baseStartDate">AND TRUNC(BASE_START_DATE) &gt;= TRUNC(TO_DATE(#{baseStartDate},'YYYY-MM-DD'))</if>
+			<if test="null != baseStartDate1 and '' != baseStartDate1">AND TRUNC(BASE_START_DATE) &lt;= TRUNC(TO_DATE(#{baseStartDate1},'YYYY-MM-DD'))</if>
+			<if test="null != baseEndDate and '' != baseEndDate">AND TRUNC(BASE_END_DATE) &gt;= TRUNC(TO_DATE(#{baseEndDate},'YYYY-MM-DD'))</if>
+			<if test="null != baseEndDate1 and '' != baseEndDate1">AND TRUNC(BASE_END_DATE) &lt;= TRUNC(TO_DATE(#{baseEndDate1},'YYYY-MM-DD'))</if>
+			
+			<if test="null != actStartDate and '' != actStartDate">AND ACT_START_DATE = TO_DATE(#{actStartDate},'YYYY-MM-DD')</if>
+			<if test="null != actEndDate and '' != actEndDate">AND ACT_END_DATE = TO_DATE(#{actEndDate},'YYYY-MM-DD')</if>
+			<if test="null != planHours and '' != planHours">AND PLAN_HOURS = #{planHours}</if>
+			<if test="null != assginUser and '' != assginUser">AND ASSIGN_USER = #{assginUser}</if>
+			<if test="null != assginDept and '' != assginDept">AND ASSIGN_DEPT = #{assginDept}</if>
+			<if test="null != respUser and '' != respUser">AND RESP_USER = #{respUser}</if>
+			<if test="null != respDept and '' != respDept">AND RESP_DEPT = #{respDept}</if>
+			<if test="null != agginFlag and '' != agginFlag">AND APP_AGAIN_FLAG = #{agginFlag}</if>
+			<if test="null != parentId and '' != parentId">AND PARENT_ID = #{parentId}</if>
+			<if test="null != childSum and '' != childSum">AND CHILD_SUM = #{childSum}</if>
+			<if test="null != childUndo and '' != childUndo">AND CHILD_DOUE = #{childUndo}</if>
+			<if test="null != createTime and '' != createTime">AND CREATE_TIME = TO_DATE(#{createTime},'YYYY-MM-DD')</if>
+			<if test="null != createUser and '' != createUser">AND CREATE_USER = #{createUser}</if>
+			<if test="null != updateTime and '' != updateTime">AND UPDATE_TIME = TO_DATE(#{updateTime},'YYYY-MM-DD')</if>
+			<if test="null != updateUser and '' != updateUser">AND UPDATE_USER = #{updateUser}</if>
+			<if test="null != assignUserName and '' != assignUserName">AND ASSIGN_USER_NAME LIKE CONCAT(CONCAT('%', #{assignUserName}),'%')</if>
+			<if test="null != respUserName and '' != respUserName">AND RESP_USER_NAME LIKE CONCAT(CONCAT('%', #{respUserName}),'%')</if>
+			<if test="null != projCode and '' != projCode">AND PROJ_CODE LIKE CONCAT(CONCAT('%', #{projCode}),'%')</if>
+			
+			<if test="null != arrayType and arrayType != ''">
+				AND TYPE IN
+				<foreach collection="arrayType" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arraystatus and arraystatus != ''">
+				AND STATUS IN
+				<foreach collection="arraystatus" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arraySerious and arraySerious != ''">
+				AND SERIOUS IN
+				<foreach collection="arraySerious" index="index" item="item" open="(" separator="," close=")">  
+	           		'${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arrayPriority and arrayPriority != ''">
+				AND PRIORITY IN
+				<foreach collection="arrayPriority" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arrayDeptNo and arrayDeptNo != ''">
+				AND (RESP_DEPT IN
+				<foreach collection="arrayDeptNo" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+	   			OR ASSIGN_DEPT IN
+	   			<foreach collection="arrayDeptNo" index="index" item="item" open="(" separator="," close=")">  
+	           		  '${item}'
+	   			</foreach>
+	   			)
+			</if>
+		</where>
+	</select>
+	
+	<select id="getAllBySearchName" parameterType="map" resultMap="dtoMap">
+		SELECT <include refid="columnsDto"/>
+		FROM V_APP_USER_TASK_PLATFROM
+		<where>
+		    (
+				ASSIGN_USER = #{userId}
+				OR RESP_USER = #{userId}
+			)
+			AND
+			(
+				NAME LIKE CONCAT(CONCAT('%', #{searchName}),'%') 
+				OR ASSIGN_USER_NAME LIKE CONCAT(CONCAT('%', #{searchName}),'%')
+				OR RESP_USER_NAME LIKE CONCAT(CONCAT('%', #{searchName}),'%')
+			)
+		</where>
+	</select>
+	
+	<select id="getVList" parameterType="com.ebon.v3.dto.VAppUserTaskPlatfrom" resultMap="dtoMap">
+		SELECT <include refid="columnsDto"/>
+		FROM V_APP_USER_TASK_PLATFROM
+		<where>
+			DELETE_FLAG IS NULL
+			<if test="null != id and '' != id">AND ID = #{id}</if>
+			<if test="null != name and '' != name">AND NAME = #{name}</if>
+			<if test="null != type and '' != type">AND TYPE = #{type}</if>
+			<if test="null != status and '' != status">AND STATUS = #{status}</if>
+			<if test="null != source and '' != source">AND SOURCE = #{source}</if>
+			<if test="null != projId and '' != projId">AND PROJ_ID = #{projId}</if>
+			<if test="null != OPLId and '' != OPLId">AND OPL_ID = #{OPLId}</if>
+			
+			<if test="null != baseStartDate and '' != baseStartDate">AND TRUNC(BASE_START_DATE) &gt;= TRUNC(TO_DATE(#{baseStartDate},'YYYY-MM-DD'))</if>
+			<if test="null != baseStartDate1 and '' != baseStartDate1">AND TRUNC(BASE_START_DATE) &lt;= TRUNC(TO_DATE(#{baseStartDate1},'YYYY-MM-DD'))</if>
+			<if test="null != baseEndDate and '' != baseEndDate">AND TRUNC(BASE_END_DATE) &gt;= TRUNC(TO_DATE(#{baseEndDate},'YYYY-MM-DD'))</if>
+			<if test="null != baseEndDate1 and '' != baseEndDate1">AND TRUNC(BASE_END_DATE) &lt;= TRUNC(TO_DATE(#{baseEndDate1},'YYYY-MM-DD'))</if>
+			
+			<if test="null != actStartDate and '' != actStartDate">AND ACT_START_DATE = TO_DATE(#{actStartDate},'YYYY-MM-DD')</if>
+			<if test="null != actEndDate and '' != actEndDate">AND ACT_END_DATE = TO_DATE(#{actEndDate},'YYYY-MM-DD')</if>
+			<if test="null != planHours and '' != planHours">AND PLAN_HOURS = #{planHours}</if>
+			<if test="null != assginUser and '' != assginUser">AND ASSIGN_USER = #{assginUser}</if>
+			<if test="null != assginDept and '' != assginDept">AND ASSIGN_DEPT = #{assginDept}</if>
+			<if test="null != respUser and '' != respUser">AND RESP_USER = #{respUser}</if>
+			<if test="null != respDept and '' != respDept">AND RESP_DEPT = #{respDept}</if>
+			<if test="null != agginFlag and '' != agginFlag">AND APP_AGAIN_FLAG = #{agginFlag}</if>
+			<if test="null != parentId and '' != parentId">AND PARENT_ID = #{parentId}</if>
+			<if test="null != childSum and '' != childSum">AND CHILD_SUM = #{childSum}</if>
+			<if test="null != childUndo and '' != childUndo">AND CHILD_DOUE = #{childUndo}</if>
+			<if test="null != createTime and '' != createTime">AND CREATE_TIME = TO_DATE(#{createTime},'YYYY-MM-DD')</if>
+			<if test="null != createUser and '' != createUser">AND CREATE_USER = #{createUser}</if>
+			<if test="null != updateTime and '' != updateTime">AND UPDATE_TIME = TO_DATE(#{updateTime},'YYYY-MM-DD')</if>
+			<if test="null != updateUser and '' != updateUser">AND UPDATE_USER = #{updateUser}</if>
+			<if test="null != assignUserName and '' != assignUserName">AND ASSIGN_USER_NAME LIKE CONCAT(CONCAT('%', #{assignUserName}),'%')</if>
+			<if test="null != respUserName and '' != respUserName">AND RESP_USER_NAME LIKE CONCAT(CONCAT('%', #{respUserName}),'%')</if>
+			<if test="null != projCode and '' != projCode">AND PROJ_CODE LIKE CONCAT(CONCAT('%', #{projCode}),'%')</if>
+			
+			<if test="null != arrayType and arrayType != ''">
+				AND TYPE IN
+				<foreach collection="arrayType" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arraystatus and arraystatus != ''">
+				AND STATUS IN
+				<foreach collection="arraystatus" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arraySerious and arraySerious != ''">
+				AND SERIOUS IN
+				<foreach collection="arraySerious" index="index" item="item" open="(" separator="," close=")">  
+	           		'${item}'
+	   			</foreach>
+			</if>
+			
+			<if test="null != arrayPriority and arrayPriority != ''">
+				AND PRIORITY IN
+				<foreach collection="arrayPriority" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+			</if>
+			<if test="null != arrayDeptNo and arrayDeptNo != ''">
+				AND (RESP_DEPT IN
+				<foreach collection="arrayDeptNo" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+	   			OR ASSIGN_DEPT IN
+	   			<foreach collection="arrayDeptNo" index="index" item="item" open="(" separator="," close=")">  
+	           		 '${item}'
+	   			</foreach>
+	   			)
+			</if>
+		</where>
+	</select>
+	
+	
+	<select id="getVById" parameterType="string" resultMap="dtoMap">
+		SELECT <include refid="columnsDto"/>
+		FROM V_APP_USER_TASK_PLATFROM
+		<where>
+			ID = #{id}
+		</where>
+	</select>
+	
+	<select id="getVByUserId" parameterType="string" resultMap="dtoMap">
+		SELECT 
+		V.USER_ID AS RESP_USER,
+		V.RESP_DEPT,
+		V.IS_LEADER,
+		V.DEPT_NO
+		FROM V_APP_USERS_ISLEADER V
+		<where>
+			V.USER_ID = #{USERID,jdbcType=VARCHAR}
+		</where>
+	</select>
+	
+	<select id="getManagerDept" resultMap="dtoMap">
+		SELECT 
+			CD.DEPT_NO AS ID,
+			CD.DEPT_NAME AS NAME,
+			CD.PARENT_DEPT_NO AS PARENT_ID
+		FROM CM_DEPART CD
+			START WITH CD.PARENT_DEPT_NO = '0'
+			CONNECT BY PRIOR CD.DEPT_NO = CD.PARENT_DEPT_NO
+	</select>
+	<select id="getLeaderDept" parameterType="string" resultMap="dtoMap">
+		SELECT 
+			CD.DEPT_NO AS ID,
+			CD.DEPT_NAME AS NAME,
+			CD.PARENT_DEPT_NO AS PARENT_ID
+		FROM CM_DEPART CD
+			START WITH CD.DEPT_NO = #{deptNo,jdbcType=VARCHAR}
+			CONNECT BY PRIOR CD.DEPT_NO = CD.PARENT_DEPT_NO
+	</select>
+	
+	<select id="getAllRespUsers" resultType="String">
+		SELECT 
+		USER_ID
+		FROM V3_HAVE_TASK_USER_ID
+	</select>
+	<select id="getAllUsers" resultType="String">
+		SELECT 
+		USER_ID
+		FROM CM_USERS
+	    WHERE USER_ID
+		NOT IN(SELECT 
+		USER_ID
+		FROM V3_HAVE_TASK_USER_ID)
+	</select>
+	
+	<select id="getVByResp" parameterType="String" resultMap="dtoMap">
+		SELECT
+		ID,
+		RESP_USER
+		FROM V_APP_USER_TASK_PLATFROM
+		WHERE RESP_USER = #{userId}
+		AND STATUS = '2'
+	</select>
+</mapper>

@@ -1,0 +1,67 @@
+package com.ebon.v3.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.ebon.framework.vo.Result;
+import com.ebon.platform.dao.pager.Page;
+import com.ebon.v3.vo.MileStone;
+
+public interface IMileStoneService {
+
+	/**
+	 * 里程碑添加
+	 * @return
+	 */
+	public Result add(MileStone mileStone);
+	/**
+	 * 删除里程碑
+	 * @param id 里程碑Id
+	 * @return
+	 */
+	public Result deleteById(String id);
+	/**
+	 * 里程碑修改
+	 * @param mileStone
+	 * @return
+	 */
+	public Result edit(MileStone mileStone);
+	
+	/**
+	 * 主项目保存基线
+	 * @param mileStone
+	 * @return
+	 */
+	public Result saveBaseLine(List<MileStone> mileStone,String projId);
+	
+	/**
+	 * 主项目里程碑list（获取不同版本的基线）
+	 * @param version(为空时获取最大版本的基线以及刚刚更新的里程碑；不为空则按照版本查询)
+	 * @return
+	 */
+	public List<MileStone> maxBaseLineData(Map<String,String> map,Page page);
+	/**
+	 * 获取最高基线版本
+	 * @return
+	 */
+	public String maxBaseLine(Map<String,String> map);
+	/**
+	 * 零部件里程碑list（获取不同版本的基线）
+	 * @param map
+	 * @return
+	 */
+	public List<MileStone> maxChildBaseLineData(Map<String,String> map,Page page);
+	/**
+	 * 零部件项目的保存基线
+	 * @param list
+	 * @return
+	 */
+	public Result saveChildBaseLine(List<MileStone> list,String projId,String childId);
+	/**
+	 * 获取最新版本零部件项目里程碑
+	 * @param map
+	 * @return
+	 */
+	public List<MileStone> childBaseLineData(Map<String,String> map);
+	
+}

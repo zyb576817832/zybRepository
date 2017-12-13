@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+					http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+					http://www.springframework.org/schema/tx
+					http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+					http://www.springframework.org/schema/context
+					http://www.springframework.org/schema/context/spring-context-3.0.xsd" default-autowire="byName">
+	<!-- 属性文件读入 -->
+	<bean class="com.ebon.platform.extend.ExtPropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:config/*.properties</value>
+			</list>
+		</property>
+	</bean>
+	<import resource="datasource-dbcp.xml"/>
+	<!-- 配置事务管理器，注意这里的dataSource和SqlSessionFactoryBean的dataSource要一致，不然事务就没有作用了 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>	
+	<bean id="pmsTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="pmsDataSource" />
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<tx:annotation-driven transaction-manager="pmsTransactionManager" />
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis-config.xml" />
+		<property name="mapperLocations" value="classpath*:mapper/**/*.xml" />
+	</bean>	
+	<bean id="pmsSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="pmsDataSource" />
+		<!-- <property name="configLocation" value="classpath:mybatis-config.xml" /> -->
+		<property name="mapperLocations" value="classpath*:mapper/**/*.xml" />
+	</bean>
+	<context:annotation-config />	
+	<bean id="springContextUtil" class="com.ebon.platform.util.SpringContextUtil"></bean>
+	<!-- 注解探测器 ， 在JUnit测试的时候需要 -->
+	<context:component-scan base-package="com.ebon">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<bean id="myBatisDao" class="com.ebon.platform.dao.MyBatisDao"></bean>
+	
+	
+	
+	 <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">  
+        <property name="host" value="${mail.host}" />  
+        <property name="username" value="${mail.username}" />  
+        <property name="password" value="${mail.password}" />  
+        <property name="defaultEncoding" value="UTF-8"></property>  
+        <property name="javaMailProperties">  
+            <props>  
+                <prop key="mail.smtp.auth">${mail.smtp.auth}</prop>  
+                <prop key="mail.smtp.timeout">${mail.smtp.timeout}</prop>  
+            </props>  
+        </property>  
+    </bean>  
+	
+</beans>

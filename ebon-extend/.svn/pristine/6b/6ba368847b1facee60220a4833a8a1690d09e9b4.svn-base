@@ -1,0 +1,224 @@
+package com.ebon.v3.dto;
+
+import com.ebon.v3.vo.AppUserTaskPlatfrom;
+
+public class VAppUserTaskPlatfrom extends AppUserTaskPlatfrom {
+	/**
+	 * 
+	 */
+	public static final long serialVersionUID = 1L;
+	public String actHours;//实际工时
+	public String assignUserName;//发包人名称
+	public String respUserName;//责任人名称
+	
+	//项目信息
+	public String ph1;
+	public String projCode;//项目号
+	
+	//OPL相关信息
+	public String serious;//严重程度
+	public String seriousName;
+	public String priority;//优先级
+	
+	private String userId;//用于检索：模糊为责任人或者发包人Id
+	
+	protected String baseStartDate1;//用于比较日期大小
+	protected String baseEndDate1;//用于比较日期大小
+	
+	private String isLeader;//是否领导
+	
+	private String deptNo;//部门号
+	
+	//用于查询多个状态
+	private String[] arrayType;
+	private String[] arraystatus;
+	private String[] arraySerious;
+	private String[] arrayPriority;
+	private String[] arrayRespDept;
+	private String[] arrayAssignDept;
+	
+	public String getSerious() {
+		return serious;
+	}
+
+
+	public void setSerious(String serious) {
+		this.serious = serious;
+	}
+
+	public String getSeriousName() {
+		return seriousName;
+	}
+
+	public void setSeriousName(String seriousName) {
+		this.seriousName = seriousName;
+	}
+
+
+	public String getPriority() {
+		return priority;
+	}
+
+
+	public void setPriority(String priority) {
+		this.priority = priority;
+	}
+
+
+	public String getBaseStartDate1() {
+		return baseStartDate1;
+	}
+
+
+	public void setBaseStartDate1(String baseStartDate1) {
+		this.baseStartDate1 = baseStartDate1;
+	}
+
+
+	public String getBaseEndDate1() {
+		return baseEndDate1;
+	}
+
+
+	public void setBaseEndDate1(String baseEndDate1) {
+		this.baseEndDate1 = baseEndDate1;
+	}
+
+
+	public String[] getArrayType() {
+		return arrayType;
+	}
+
+
+	public void setArrayType(String[] arrayType) {
+		this.arrayType = arrayType;
+	}
+
+
+	public String[] getArraystatus() {
+		return arraystatus;
+	}
+
+
+	public void setArraystatus(String[] arraystatus) {
+		this.arraystatus = arraystatus;
+	}
+
+
+	public String[] getArraySerious() {
+		return arraySerious;
+	}
+
+
+	public void setArraySerious(String[] arraySerious) {
+		this.arraySerious = arraySerious;
+	}
+
+
+	public String[] getArrayPriority() {
+		return arrayPriority;
+	}
+
+
+	public void setArrayPriority(String[] arrayPriority) {
+		this.arrayPriority = arrayPriority;
+	}
+
+
+	public String getActHours() {
+		return actHours;
+	}
+
+
+	public void setActHours(String actHours) {
+		this.actHours = actHours;
+	}
+
+
+	public String getAssignUserName() {
+		return assignUserName;
+	}
+
+
+	public void setAssignUserName(String assignUserName) {
+		this.assignUserName = assignUserName;
+	}
+
+
+	public String getRespUserName() {
+		return respUserName;
+	}
+
+
+	public void setRespUserName(String respUserName) {
+		this.respUserName = respUserName;
+	}
+
+
+	public String getPh1() {
+		return ph1;
+	}
+
+
+	public void setPh1(String ph1) {
+		this.ph1 = ph1;
+	}
+
+
+	public String getProjCode() {
+		return projCode;
+	}
+
+
+	public void setProjCode(String projCode) {
+		this.projCode = projCode;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+
+	public String getIsLeader() {
+		return isLeader;
+	}
+
+
+	public void setIsLeader(String isLeader) {
+		this.isLeader = isLeader;
+	}
+
+
+	public String[] getArrayRespDept() {
+		return arrayRespDept;
+	}
+
+
+	public void setArrayRespDept(String[] arrayRespDept) {
+		this.arrayRespDept = arrayRespDept;
+	}
+
+
+	public String[] getArrayAssignDept() {
+		return arrayAssignDept;
+	}
+
+
+	public void setArrayAssignDept(String[] arrayAssignDept) {
+		this.arrayAssignDept = arrayAssignDept;
+	}
+
+
+	public String getDeptNo() {
+		return deptNo;
+	}
+
+	public void setDeptNo(String deptNo) {
+		this.deptNo = deptNo;
+	}
+}

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.appUserTaskPlatform">
+	<insert id="add" parameterType="com.ebon.v3.vo.AppUserTaskPlatfrom">
+		INSERT INTO APP_USER_TASK_PLATFROM(
+			ID,
+			NAME,
+			TYPE,
+			STATUS,
+			<if test="source != null">SOURCE,</if>
+			<if test="projId != null">PROJ_ID,</if>
+			<if test="OPLId != null">OPL_ID,</if>
+			BASE_START_DATE,
+			BASE_END_DATE,
+			PLAN_HOURS,
+			ASSIGN_USER,
+			<if test="assginDept != null">ASSIGN_DEPT,</if>
+			RESP_USER,
+			<if test="respDept != null">RESP_DEPT,</if>
+			<if test="parentId != null">PARENT_ID,</if>
+			CREATE_USER,
+			CREATE_TIME
+		)
+		VALUES(
+			SYS_GUID(),
+			#{name},
+			#{type},
+			#{status},
+			<if test="source != null">#{source},</if>
+			<if test="projId != null">#{projId},</if>
+			<if test="OPLId != null">#{OPLId},</if>
+			TO_DATE(#{baseStartDate},'YYYY-MM-DD'),
+			TO_DATE(#{baseEndDate},'YYYY-MM-DD'),
+			#{planHours},
+			#{assginUser},
+			<if test="assginDept != null">#{assginDept},</if>
+			#{respUser},
+			<if test="respDept != null">#{respDept},</if>
+			<if test="parentId != null">#{parentId},</if>
+			#{createUser},
+			sysdate
+		)
+	</insert>
+	<update id="update" parameterType="com.ebon.v3.vo.AppUserTaskPlatfrom">
+		UPDATE APP_USER_TASK_PLATFROM SET
+		<if test="name != null">NAME = #{name},</if>
+		<if test="type != null">TYPE = #{type},</if>
+		<if test="status != null">STATUS = #{status},</if>
+		<if test="source != null">SOURCE = #{source},</if>
+		<if test="actStartDate != null">ACT_START_DATE = TO_DATE(#{actStartDate},'YYYY-MM-DD'),</if>
+		<if test="actEndDate != null">ACT_END_DATE = TO_DATE(#{actEndDate},'YYYY-MM-DD'),</if>
+		<if test="planHours != null">PLAN_HOURS = #{planHours},</if>
+		<if test="updateUser != null">UPDATE_USER = #{updateUser},</if>
+		<if test="childSum != null">CHILD_SUM = #{childSum},</if>
+		<if test="childUndo != null">CHILD_DOUE = #{childUndo},</if>
+		<if test="agginFlag != null">APP_AGAIN_FLAG = #{agginFlag},</if>
+		UPDATE_TIME = sysdate
+		<where>
+			ID = #{id}
+		</where>
+	</update>
+	
+	<update id="delete" parameterType="map">
+		UPDATE APP_USER_TASK_PLATFROM SET
+		DELETE_FLAG = SYS_GUID(),
+		UPDATE_TIME = sysdate,
+		UPDATE_USER = #{userId}
+		<where>
+			ID = #{id}
+		</where>
+	</update>
+</mapper>

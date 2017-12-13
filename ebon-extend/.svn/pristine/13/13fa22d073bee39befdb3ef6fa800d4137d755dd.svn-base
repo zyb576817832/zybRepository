@@ -1,0 +1,395 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/common/meta2.jsp"%>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>全部任务页面</title>
+<script type="text/javascript" src="${path}/v3/util.js"></script>
+<script type="text/javascript">
+	var selectedRow;//全局变量,选中行任务
+	$(function(){
+		//高级检索区默认隐藏
+		serarchDivHideFn();
+	});
+	
+	//高级检索区域隐藏
+	function serarchDivHideFn(){
+		$('#search_div_detail').hide();
+	}
+	//高级检索区显示
+	function serarchDivShowFn(){
+		$('#search_div_detail').show();
+	}
+	//普通检索区域隐藏
+	function serarchGeneralDivHideFn(){
+		$('#search_div_general').hide();
+	}
+	//点击高级查询按钮
+	function showDetailSearch(){
+		//当点击高级检索设置为110
+		$("#search_div_all").height(170);
+		serarchGeneralDivHideFn();
+		serarchDivShowFn();
+	}
+	
+	//普通检索查询方法
+	function generalSearchFn(){
+		var searchName = $('#searchName').val();
+		if(searchName){
+			searchName = encodeURI(searchName, "UTF-8");//中文乱码
+			$.post('${path}/app/userTaskPlatfrom/getAllBySearchName.action?userId=${userId}&searchName='+ searchName, function(data){
+				$('#tab1_dg').datagrid('loadData',data);
+			},'json');
+		}else{
+			$.messager.alert('提示','请输入检索内容');
+		}
+	}
+	
+	//普通的重置查询方法
+	function generalResetFn(){
+		tableReload();
+	}
+	
+	function detailSearchFn(){
+		var arrayType = $('#arrayType').combobox('getValues');//下拉
+		var assignUserName = $('#assignUserName').val();
+		var respUserName = $('#respUserName').val();
+		var baseStartDate = $('#baseStartDate').val();
+		var baseStartDate1 = $('#baseStartDate1').val();
+		var baseEndDate = $('#baseEndDate').val();
+		var baseEndDate1 = $('#baseEndDate1').val();
+		var arraystatus = $('#arraystatus').combobox('getValues');//下拉
+		var arraySerious =$('#arraySerious').combobox('getValues');//下拉
+		var arrayPriority = $('#arrayPriority').combobox('getValues');//下拉
+		var projCode = $('#projCode').val();
+		var paramsUrl = '';
+		if(arrayType.length>0){
+			paramsUrl+='&arrayType=' + arrayType;
+		}if(arraystatus.length>0){
+			paramsUrl+='&arraystatus=' + arraystatus;
+		}
+		if(arraySerious.length>0){
+			paramsUrl+='&arraySerious=' + arraySerious;
+		}
+		if(arrayPriority.length>0){
+			paramsUrl+='&arrayPriority=' + arrayPriority;
+		}	
+		if(assignUserName){
+			paramsUrl+='&assignUserName=' + assignUserName;
+		}
+		if(respUserName){
+			paramsUrl+='&respUserName=' + respUserName;
+		}
+		if(baseStartDate){
+			paramsUrl+='&baseStartDate=' + baseStartDate;
+		}
+		if(baseEndDate){
+			paramsUrl+='&baseEndDate=' + baseEndDate;
+		}
+		if(baseStartDate1){
+			paramsUrl+='&baseStartDate1=' + baseStartDate1;
+		}
+		if(baseEndDate1){
+			paramsUrl+='&baseEndDate1=' + baseEndDate1;
+		}
+		if(projCode){
+			paramsUrl+='&projCode=' + projCode;
+		}
+		var ranNumber=Math.random(); //IE缓存
+		paramsUrl+='&ranNumber=' + ranNumber;
+		var dgUrl = $('#tab1_dg').datagrid('options').url+paramsUrl;
+		$.post(dgUrl,function(data){
+			$('#tab1_dg').datagrid('loadData',data);
+		},'json');
+		$('#tab1_dg').datagrid({url:dgUrl});//防止下一页无查询参数 QX 20170026
+	}
+	
+	function detailResetFn(){
+		$('#search_div_detail_from').form("clear");
+		var dgUrl = $('#tab1_dg').datagrid('options').url;
+		$.post(dgUrl,function(data){
+			$('#tab1_dg').datagrid('loadData',data);
+		},'json');
+	}
+	
+	//点击任务列表
+	function tab1_dg_selectFn(index, rowData){
+		selectedRow = rowData;
+		getTaskMainPage(selectedRow.ID);
+	}
+	
+	//新跳转到任务详情页面
+	function getTaskMainPage(taskId){
+		$("#tab1_right").html("");//先将div内部清空,否则会不停追加
+		if(!taskId){
+			return;
+		}
+		var mainHTML = "<iframe name=\"tab1_right_iframe\" id=\"tab1_right_iframe\" scrolling=\"no\" frameborder=\"0\"  src=\"${path}/v3/app/menu/getTaskMainPage.action?randomNum=${randomNum}&type=${type}&userId=${userId}&taskId=" + taskId + "\" style=\"width:100%;height:100%;\"></iframe>";
+		$("#tab1_right").append(mainHTML);
+	}
+	
+	function tableReload(){
+		//$('#tab1_dg').datagrid('reload');
+		var ranNumber=Math.random(); //IE缓存
+		$('#tab1_dg').datagrid('load', {    
+			ranNumber: ranNumber  
+		});
+	}
+	
+	function exportExcel(){
+		$("#export").submit();
+	}
+</script>
+</head>
+<body>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'center',split:true">
+			<div class="easyui-layout" data-options="fit:true">
+				<!-- 检索区域 -->
+				<div data-options="region:'north'" style="height:170px;padding:13px;" id="search_div_all">
+					<!-- 普通的检索区域： -->
+					<div id="search_div_general">
+						<input class="easyui-textbox" data-options="prompt:'任务名称、姓名'" name="searchName" style="width:200px;" id="searchName">
+						<a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="generalSearchFn()">Search</a>
+						<a href="#" class="easyui-linkbutton" iconCls="icon-reload"  onclick="generalResetFn()">Reset</a>
+						<a href="#" class="easyui-linkbutton" iconCls="icon-filter" onclick="showDetailSearch()">More Search</a>
+						<a href="#"  class="easyui-linkbutton" iconCls="icon-redo" onclick="exportExcel('${userId}')">Export</a>
+					</div>
+					<!-- 高级检索区域：  -->
+					<div id="search_div_detail">
+							<form id="search_div_detail_from">
+							<div style="margin-bottom:8px">
+								<input class="easyui-textbox" data-options="prompt:'发包人'"  id="assignUserName" style="width:130px;">
+								<input class="easyui-textbox" data-options="prompt:'责任人'"  id="respUserName" style="width:130px;">
+								<input class="easyui-textbox" data-options="prompt:'项目号'"  id="projCode" style="width:130px;">&nbsp;
+								类型:<select class="easyui-combobox" data-options="multiple:true,value:''" id="arrayType" style="width:120px;">
+									<option value="1">计划任务</option>
+									<option value="2">OPL</option>
+									<option value="3">风险</option>
+									<option value="4">分解任务</option>
+								</select>
+							</div>
+							<div style="margin-bottom:8px">
+								状态:<select class="easyui-combobox" data-options="multiple:true,value:''" id="arraystatus" style="width:130px;">
+									<option value="1">未开始</option>
+									<option value="2">已开始</option>
+									<option value="3">审批中</option>
+									<option value="4">完成</option>
+									<option value="5">已取消</option>
+								</select>
+								&nbsp;&nbsp;&nbsp;
+								优先级:<select class="easyui-combobox" data-options="multiple:true,value:''" id="arrayPriority" style="width:130px;">
+									<option value="3001">High</option>
+									<option value="3002">Medium</option>
+									<option value="3003">Low</option>
+								</select>
+								&nbsp;&nbsp;&nbsp;
+								严重程度:<select class="easyui-combobox" data-options="multiple:true,value:''" id="arraySerious" style="width:130px;">
+									<option value="6434">Blocker</option>
+									<option value="6435">Critical</option>
+									<option value="6436">Major</option>
+									<option value="877CA8CF7C714FCC828AE21B39C81AD0">Normal</option>
+									<option value="178CA7C290BA4F77B5DE635824EE8906">Minor</option>
+								</select>
+							</div>
+							<div style="margin-bottom:8px">
+								要求开始时间:从<input class="easyui-datebox" style="width:180px" id="baseStartDate">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								到<input class="easyui-datebox" style="width:180px" id="baseStartDate1">
+							</div>
+							<div style="margin-bottom:8px">
+								要求结束时间:从<input class="easyui-datebox" style="width:180px" id="baseEndDate">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								到<input class="easyui-datebox" style="width:180px" id="baseEndDate1">
+							</div>
+							</form>
+						<a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="detailSearchFn()">Search</a>
+						<a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="detailResetFn()">Reset</a>
+						<a href="#"  class="easyui-linkbutton" iconCls="icon-redo" onclick="exportExcel('${userId}')">Export</a>
+					</div>
+				</div>
+				
+				<c:choose>
+						<c:when test="${userId eq '95A62E63-07EA-BCF1-00A2-0982C0A80115' }">
+							<!-- 数据展示区 -->
+							<c:if test="${1 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getAllByUserId.action?randomNum=${randomNum}',
+																							method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:50,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="160" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'RESP_USER_NAME',align:'center'"width="160" sortable="true">责任人</th>
+												<th data-options="field:'RESP_DEPT',align:'center'" sortable="true">责任人所属</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${2 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:10,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${3 eq type }">	
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&status=1',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:50,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${4 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&arraystatus=2,3',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:10,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${5 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&status=4',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:50,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+						</c:when>
+						
+						
+						<c:otherwise>
+							<!-- 数据展示区 -->
+							<c:if test="${1 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getAllByUserId.action?randomNum=${randomNum}&userId=${userId}',
+																							method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:50,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="160" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'RESP_USER_NAME',align:'center'"width="160" sortable="true">责任人</th>
+												<th data-options="field:'RESP_DEPT',align:'center'" sortable="true">责任人所属</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${2 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&assginUser=${userId}',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:10,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${3 eq type }">	
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&respUser=${userId}&status=1',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:50,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${4 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&respUser=${userId}&arraystatus=2,3',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:10,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+							<c:if test="${5 eq type }">		
+								<div data-options="region:'center'">
+									<table id="tab1_dg" class="easyui-datagrid" data-options="url:'${path}/app/userTaskPlatfrom/getVList.action?randomNum=${randomNum}&respUser=${userId}&status=4',method:'get',border:false,singleSelect:true,fit:true,
+									fitColumns:false,pagination:true,striped:true,rownumbers:true,pageSize:50,onSelect:tab1_dg_selectFn">
+										<thead>
+											<tr>
+												<th data-options="field:'NAME'" width="180" sortable="true">任务名称</th>
+												<th data-options="field:'ASSIGN_USER_NAME',align:'center'" width="130" sortable="true">发包人</th>
+												<th data-options="field:'BASE_START_DATE',align:'center'"width="100" sortable="true">要求开始</th>
+												<th data-options="field:'BASE_END_DATE',align:'center'"width="100" sortable="true">要求结束</th>
+												<th data-options="field:'STATUS',align:'center', formatter:formatterStatusFn"width="60" sortable="true">状态</th>
+											</tr>
+										</thead>
+									</table>
+								</div>
+							</c:if>
+						</c:otherwise>
+				</c:choose>
+				
+			</div>
+		</div>
+		<div id="tab1_right" data-options="region:'east'" title="任务详情"  style="width:710px;"></div>
+	</div>
+	<form id="export" action="${path}/app/userTaskPlatfrom/export.action">
+		<input type="hidden" name="userId" value="${userId }">
+	</form>
+</body>
+</html>

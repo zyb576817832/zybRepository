@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="app.dictMapper">
+	<resultMap type="HashMap" id="dictMap">  
+        <result property="id" column="ID"/>
+        <result property="name" column="NAME"/>
+    </resultMap>  
+	<select id="getListByType" parameterType="String" resultMap="dictMap" >
+		SELECT  ID, 
+				CODE_SHORT_NAME AS NAME
+		  FROM CM_CODE C 
+		WHERE C.CODE_TYPE = #{type}
+			ORDER BY NAME
+	</select>	
+	<select id="getListByTypeAndRemark" parameterType="Map" resultMap="dictMap" >
+		SELECT  ID, 
+				CODE_SHORT_NAME AS NAME
+		  FROM CM_CODE C 
+		WHERE C.CODE_TYPE = #{type}
+		<if test="remark != null">
+			AND C.REMARK = #{remark}
+		</if>
+	</select>	
+</mapper>

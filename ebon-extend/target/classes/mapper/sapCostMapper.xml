@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sapCostMapper">
+	<insert id="insert" parameterType="HashMap">
+		INSERT INTO FI_SAP_COST
+		  (GLACCOUNT,
+		   COSTCENTER,
+		   INTERNALORDERNO,
+		   ORDERDESC,
+		   DOCHEADTEXT,
+		   DOCTYPE,
+		   TRANSACTIONCURRENCY,
+		   TRANSACTIONVALUE,
+		   COVALUE,
+		   FLAG,
+		   POSTINGDATE) VALUES 
+			(#{glAccount}
+			, #{costCenter}
+			, #{internalOrderNO}
+			, #{projectNo}
+			, #{docHeadText}
+			, #{docType}
+			, #{transactionCurrency}
+			, #{transactionValue}
+			, #{coValue}
+			, #{flag}
+			, to_date(#{postingDate}, 'yyyy-mm-dd'))
+	</insert>
+	<delete id="delete" parameterType="HashMap">
+		delete from FI_SAP_COST sc 
+		 where sc.postingdate <![CDATA[>=]]> to_date(#{fristDate}, 'yyyy-mm-dd') 
+		   and sc.postingdate <![CDATA[<=]]> to_date(#{lastDate}, 'yyyy-mm-dd') 
+	</delete>
+	<resultMap type="HashMap" id="SAPMap">
+	<result  property="projectInfoId"  column="PROJECTINFOID"/>
+	<result  property="sapCostElement"  column="GLACCOUNT"/>
+	<result  property="sapCostCenter"  column="COSTCENTER"/>
+	<result  property="sapTransactionType"  column="TRANSACTIONCURRENCY"/>
+	<result  property="sapCOCost"  column="COVALUE"/>
+	<result  property="sapTransactionCost"  column="TRANSACTIONVALUE"/>
+	<result	 property="sapDeptName"  column="DEPT_NAME"/>	
+	</resultMap>
+	<select id="getSAPInfo" parameterType="HashMap" resultMap="SAPMap">
+		SELECT 
+     			P.PROJ_SHORT_NAME  AS PROJECTINFOID,
+		        GLACCOUNT,
+		        TRANSACTIONCURRENCY,
+		        SUM(
+		        	CASE
+			        	WHEN SC.FLAG = 'S'
+			        		THEN TO_NUMBER(SC.TRANSACTIONVALUE) 
+			        	WHEN SC.FLAG = 'H'
+			        		THEN -TO_NUMBER(SC.TRANSACTIONVALUE) 
+		        	END
+		        ) AS TRANSACTIONVALUE,
+		        SUM(
+		        	CASE
+			        	WHEN SC.FLAG='S'
+			        		THEN TO_NUMBER(SC.COVALUE) 
+			         	WHEN SC.FLAG='H'
+			           		THEN -TO_NUMBER(SC.COVALUE) 
+		           END
+		         )               AS COVALUE,
+		       	CC.NAME         AS COSTCENTER,
+		       	D.DEPT_NAME       AS DEPT_NAME
+	    FROM FI_SAP_COST SC 
+	    LEFT JOIN CM_COSTCENTER CC ON SC.COSTCENTER = CC.CODE 
+	    LEFT JOIN CM_DEPART D ON CC.DEPT_ID = D.DEPT_NO 
+	    LEFT JOIN CM_PROJ P ON SC.INTERNALORDERNO = P.INTERNALORDER 
+        WHERE P.PROJ_SHORT_NAME IS NOT NULL AND P.PROJ_NODE_FLAG = 'Y' 
+	      	AND POSTINGDATE >= TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+	        AND POSTINGDATE <![CDATA[<]]>= TO_DATE(#{endDate}, 'YYYY-MM-DD') 
+	GROUP BY P.PROJ_SHORT_NAME,GLACCOUNT,TRANSACTIONCURRENCY,CC.NAME,D.DEPT_NAME
+  	</select>
+  	<select id="getSAPInfoForNonProject" parameterType="HashMap" resultMap="SAPMap">
+		SELECT 
+	           O.OVERHEAD_CODE  AS PROJECTINFOID,
+	            GLACCOUNT,
+	            TRANSACTIONCURRENCY,
+	            SUM(
+	              CASE
+	                WHEN SC.FLAG = 'S'
+	                  THEN TO_NUMBER(SC.TRANSACTIONVALUE) 
+	                WHEN SC.FLAG = 'H'
+	                  THEN -TO_NUMBER(SC.TRANSACTIONVALUE) 
+	              END
+	            ) AS TRANSACTIONVALUE,
+	            SUM(
+	              CASE
+	                WHEN SC.FLAG='S'
+	                  THEN TO_NUMBER(SC.COVALUE) 
+	                 WHEN SC.FLAG='H'
+	                     THEN -TO_NUMBER(SC.COVALUE) 
+	               END
+	             )               AS COVALUE,
+	             CC.NAME         AS COSTCENTER,
+	             D.DEPT_NAME       AS DEPT_NAME
+	  FROM FI_SAP_COST SC
+	  LEFT JOIN CM_COSTCENTER CC ON SC.COSTCENTER = CC.CODE 
+	  LEFT JOIN CM_DEPART D ON CC.DEPT_ID = D.DEPT_NO 
+	  LEFT JOIN CM_OVERHEAD O ON SC.INTERNALORDERNO = O.INTERNAL_ORDER  
+	  WHERE O.OVERHEAD_CODE IS NOT NULL 
+	      AND POSTINGDATE >= TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+	      AND POSTINGDATE <![CDATA[<]]>= TO_DATE(#{endDate}, 'YYYY-MM-DD') 
+	  GROUP BY O.OVERHEAD_CODE,GLACCOUNT,TRANSACTIONCURRENCY,CC.NAME,D.DEPT_NAME
+  	</select>
+</mapper>

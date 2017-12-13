@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="newNE4InfoMapper">
+	<resultMap type="HashMap" id="getNE4HourInfo">
+		<result property="facilityId" column="FACILITYID"/>
+		<result property="orderId" column="ORDERID"/>
+		<result property="hours" column="HOURS"/>
+		<result property="startDate" column="STARTDATE"/>
+		<result property="endDate" column="ENDDATE"/>
+	</resultMap>
+	<select id="getTime" resultMap="getNE4HourInfo" >
+		SELECT 
+			FACILITYID, 
+			ORDERID, 
+			TIME_NUM AS HOURS, 
+			to_char(START_DATE,'YYYY-MM-DD hh:mi:ss') AS STARTDATE, 
+			to_char(END_DATE,'YYYY-MM-DD hh:mi:ss') AS ENDDATE 
+			FROM PM_FACILITY_WORKING
+	</select>
+	<insert id="insertNewNE4Info" parameterType="HashMap">
+	INSERT INTO PM_NE4_DATE 
+	(FACILITYID,ORDERID,HOURS,TIME_NUM_DATE) 
+	VALUES (
+	#{facilityId},
+	#{orderId},
+	#{hours}, 
+	to_date(#{time_num_date},'YYYY-MM-DD')
+	)
+	</insert>
+</mapper>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.mileStone">
+
+	<insert id="add" parameterType="com.ebon.v3.vo.MileStone">
+		INSERT INTO V3_MILE_STONE(
+			PROJ_ID,
+			NAME,
+			PLAN_DATE,
+			ACT_DATE,
+			<if test="childId != null and childId != ''">
+			CHILD_ID,
+			</if>
+			CREATE_USER,
+			CREATE_TIME
+			
+		) VALUES(
+			#{projId,jdbcType=VARCHAR},
+			#{name,jdbcType=VARCHAR},
+			TO_DATE(#{planTime},'YYYY-MM-DD'),
+			TO_DATE(#{actTime},'YYYY-MM-DD'),
+			<if test="childId != null and childId != ''">
+			#{childId,jdbcType=VARCHAR},
+			</if>
+			#{createUser,jdbcType=VARCHAR},
+			sysdate
+ 		)
+	</insert>
+	
+	<insert id="saveBaseLine" parameterType="java.util.List">
+		INSERT INTO V3_MILE_STONE(
+			PROJ_ID,
+			NAME,
+			PLAN_DATE,
+			ACT_DATE,
+			T_VERSION,
+			UPDATE_USER,
+			UPDATE_TIME
+		)
+		
+		<foreach collection="list" item="item" index="index" separator="UNION ALL" >  
+       	  (SELECT
+       	  #{item.projId,jdbcType=VARCHAR},
+       	  #{item.name,jdbcType=VARCHAR},
+       	  TO_DATE(#{item.planTime,jdbcType=VARCHAR},'YYYY-MM-DD'),
+       	  TO_DATE(#{item.actTime,jdbcType=VARCHAR},'YYYY-MM-DD'),
+       	  #{item.version,jdbcType=VARCHAR},
+       	  #{item.updateUser,jdbcType=VARCHAR},
+       	  sysdate FROM DUAL
+       	  )
+       	    
+    	</foreach> 
+	</insert>
+	
+	<insert id="saveChildBaseLine" parameterType="java.util.List">
+		INSERT INTO V3_MILE_STONE(
+			PROJ_ID,
+			NAME,
+			PLAN_DATE,
+			ACT_DATE,
+			T_VERSION,
+			UPDATE_USER,
+			UPDATE_TIME,
+			CHILD_ID
+		)
+		
+		<foreach collection="list" item="item" index="index" separator="UNION ALL" >  
+       	  (SELECT
+       	  #{item.projId,jdbcType=VARCHAR},
+       	  #{item.name,jdbcType=VARCHAR},
+       	  TO_DATE(#{item.planTime,jdbcType=VARCHAR},'YYYY-MM-DD'),
+	      TO_DATE(#{item.actTime,jdbcType=VARCHAR},'YYYY-MM-DD'), 
+       	  #{item.version,jdbcType=VARCHAR},
+       	  #{item.updateUser,jdbcType=VARCHAR},
+       	  sysdate,
+       	  #{item.childId,jdbcType=VARCHAR} FROM DUAL
+       	  )
+       	    
+    	</foreach> 
+	</insert>
+	
+	<delete id="deleteById" parameterType="String">
+		DELETE FROM V3_MILE_STONE
+		WHERE ID = #{id,jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteByVersion" parameterType="String">
+		DELETE FROM V3_MILE_STONE
+		WHERE PROJ_ID = #{projId,jdbcType=VARCHAR}
+		AND T_VERSION IS NULL
+		AND CHILD_ID IS NULL
+	</delete>
+	<delete id="deleteByVersionChile" parameterType="map">
+		DELETE FROM V3_MILE_STONE
+		WHERE PROJ_ID = #{projId,jdbcType=VARCHAR}
+		AND CHILD_ID = #{childId,jdbcType=VARCHAR}
+		AND T_VERSION IS NULL
+	</delete>
+	
+	<update id="edit" parameterType="com.ebon.v3.vo.MileStone">
+		UPDATE V3_MILE_STONE
+		<set>
+			<if test="name!=null and name!=''">NAME = #{name},</if>
+			<if test="planTime!=null and name!=''">PLAN_DATE = TO_DATE(#{planTime},'YYYY-MM-DD'),</if>
+			<if test="actTime!=null and name!=''">ACT_DATE = TO_DATE(#{actTime},'YYYY-MM-DD'),</if>
+			<if test="updateUser!=null and name!=''">UPDATE_USER = #{updateUser},</if>
+			UPDATE_TIME = sysdate
+		</set>
+		WHERE ID = #{id,jdbcType=VARCHAR}
+		
+	</update>
+
+</mapper>

@@ -1,0 +1,281 @@
+--此处放置二期视图直接从数据库copy
+
+CREATE OR REPLACE VIEW V2_V_RPT_ALLPROJECT AS
+SELECT P.PROJ_SHORT_NAME        AS PROJ_CODE,
+              P.INTERNALORDER          AS PROJ_INTERNALORDER,
+              P.PROJ_NAME                AS PROJ_DESCRIPTION,
+              CO1.CODE_NAME            AS PROJ_CATEGORY,
+              CO2.CODE_NAME            AS PROJ_HNTE,
+              CO3.CODE_NAME              AS PROJ_TECH_CATEGORY,
+              C.SAP_CODE                 AS SAP_CODE,
+              C.SAP_NAME                 AS SAP_NAME,
+              'PROJECT'                 AS PROJ_TYPE
+        FROM CM_PROJ P
+       LEFT JOIN CM_CUSTOMER C ON P.CUSTOMER = C.CUSTOMER_ID
+       LEFT JOIN CM_CODE CO1 ON P.PROJ_TYPE = CO1.ID
+       LEFT JOIN CM_CODE CO2 ON P.HNTE = CO2.ID
+       LEFT JOIN CM_CODE CO3 ON P.TECH_CTGRY_1 = CO3.ID
+       WHERE P.ORIG_PROJ_ID IS NULL
+         AND P.PROJ_NODE_FLAG = 'Y'
+
+UNION
+
+
+select p.overhead_code PROJ_CODE,
+ p.internal_order PROJ_INTERNALORDER ,
+ p.overhead_name_cn PROJ_DESCRIPTION,
+p.project_category PROJ_CATEGORY,
+p.hnte as PROJ_HNTE,
+'' as PROJ_TECH_CATEGORY,
+customer_SAP_CODE                 AS SAP_CODE,
+customer_SAP_NAME                 AS SAP_NAME,
+
+'NONPROJECT'                      AS PROJ_TYPE
+
+
+from cm_overhead p;
+
+
+
+
+
+
+create or replace view v2_v_rpt_costcenter_rate as
+select cc.id costcenterId,cc.code costcenterCode,cc.name costcenterName,cr.start_date startDate,cr.end_date endDate,cr.radio Rate
+from cm_costcenter cc join cm_costcenter_radio cr on cr.costcenter_id = cc.id;
+
+
+
+
+create or replace view v2_v_rpt_customer as
+select c.customer_id id ,c.company_name_cn name,cg.customer_id cgId,cg.company_name_cn cgName from cm_customer c join cm_customer cg on c.isgroup = 0 and cg.isgroup = 1 and c.customer_group = cg.customer_id;
+
+
+
+
+
+create or replace view v2_v_rpt_ph as
+select ph2.ph_id ph2Code,ph2.cname  ph2Name , ph1.ph_id ph1Code,ph1.cname ph1Name
+from CM_PH ph2
+join CM_PH ph1 on ph2.parent_id = ph1.ph_id;
+
+
+
+
+CREATE OR REPLACE VIEW V2_V_RPT_PROJECT AS
+SELECT P.PROJ_SHORT_NAME        AS PROJ_CODE,
+              P.INTERNALORDER          AS PROJ_INTERNALORDER,
+              P.PROJ_NAME                AS PROJ_DESCRIPTION,
+              P.CUSTOMER                 AS CUSTOMER,
+              CO1.CODE_NAME            AS PROJ_CATEGORY,
+              CO2.CODE_NAME            AS PROJ_HNTE,
+              CO3.CODE_NAME              AS PROJ_TECH_CATEGORY,
+              PHT.ENAME                 AS PH1,
+              PH.ENAME                   AS PH2,
+              PH.PARENT_ID               AS PH1_CODE,
+              PH.PH_ID                     AS PH2_CODE,
+              C.COMPANY_NAME_CN       AS CUSTOMER_GROUP,
+              C.SAP_CODE                 AS SAP_CODE,
+              C.SAP_NAME                 AS SAP_NAME
+        FROM CM_PROJ P
+       LEFT JOIN CM_PH PH ON P.PH2 = PH.PH_ID
+       LEFT JOIN CM_PH PHT ON PH.PARENT_ID = PHT.PH_ID
+       LEFT JOIN CM_CUSTOMER C ON P.CUSTOMER = C.CUSTOMER_ID
+       LEFT JOIN CM_CODE CO1 ON P.PROJ_TYPE = CO1.ID
+       LEFT JOIN CM_CODE CO2 ON P.HNTE = CO2.ID
+       LEFT JOIN CM_CODE CO3 ON P.TECH_CTGRY_1 = CO3.ID
+       WHERE P.ORIG_PROJ_ID IS NULL
+         AND P.PROJ_NODE_FLAG = 'Y';
+
+		 
+		 
+		 
+	
+
+
+CREATE OR REPLACE VIEW V2_V_RPT_TIMESHEETITEM AS
+SELECT userId, WORK_DATE,projectCode,SUM( WORK_HOURS) WORK_HOURS,ph2,customer FROM
+(
+SELECT user_id userId,timesheet_date WORK_DATE,projectCode,approved_hours WORK_HOURS,v.ph2,v.customer FROM TS_RESOURCEHOUR rh
+
+join
+
+(
+
+
+SELECT V1.user_id,V1.usertask_id,taskId,projectCode,ph2,customer FROM
+
+(
+       SELECT * FROM
+
+CM_USERTASK UT where task_type <> 'OVERHEAD'
+
+) V1
+
+
+ JOIN
+
+(
+  SELECT t.TASK_ID taskId, p.proj_short_name projectCode,task_type,p.ph2,p.customer from
+
+  CM_TASK T  join cm_proj p on t.PROJ_ID = p.proj_object_id where task_type <> 'OVERHEAD'
+) v on to_char(V1.task_id) = to_char(v.taskid)
+
+)v
+
+on rh.usertask_id = v.usertask_id
+
+union
+
+ select ut.user_id,ts.update_date WORK_DATE,proj_code,ts.approved_hours hours,ts.ph2,ts.customer_name  from TS_RESOURCEHOUR ts
+
+join
+
+(
+select ut.user_id , ut.usertask_id , ut.task_id,o.overhead_id proj_id,o.overhead_code as proj_code from cm_usertask ut
+
+join cm_overhead  o
+
+on to_char(ut.task_id) = to_char(o.overhead_id)
+) ut
+on ts.usertask_id = ut.usertask_id
+
+
+
+
+UNION
+
+SELECT u.user_id USERID,WORK_DATE,PROJECTCODE,WORK_HOURS,p.ph2,p.customer FROM V2_RPT_TIMESHEETITEM ts 
+left join cm_users u on ts.employeeid = u.user_name
+join cm_proj p on ts.PROJECTCODE = p.proj_short_name
+
+and ts.projectcode not in ('SUP/001','SUP/002','SUP/003','SUP/004','SUP/005','SUP/006','SUP/007','SUP/008','SUP/009','SUP/010','SUP/011')
+
+union
+
+SELECT u.user_id USERID,WORK_DATE,PROJECTCODE,WORK_HOURS,'0000500100' ph2 ,'56999999' customer FROM V2_RPT_TIMESHEETITEM ts 
+left join cm_users u on ts.employeeid = u.user_name
+
+where ts.projectcode in ('SUP/001','SUP/002','SUP/003','SUP/004','SUP/005','SUP/006')
+
+union
+
+SELECT u.user_id USERID,WORK_DATE,PROJECTCODE,WORK_HOURS,'' ph2 ,'' customer FROM V2_RPT_TIMESHEETITEM ts 
+left join cm_users u on ts.employeeid = u.user_name
+
+where ts.projectcode in ('SUP/007','SUP/008','SUP/009','SUP/010','SUP/011','SUP/012')
+) TS
+
+GROUP BY  userId, WORK_DATE,projectCode,ph2,customer;
+
+
+
+
+
+
+
+
+create or replace view v2_v_rpt_uch as
+select userId,costcenterId,fromDate,nvl2(min(toDate),min(toDate),sysdate) toDate from(
+    select cuc1.user_id userId,cuc1.COSTCENTER_ID costcenterId,cuc1.record_date fromDate, cuc2.record_date toDate from
+
+    (select * from cm_user_dept_history where COSTCENTER_ID is not null ) cuc1
+
+    left join (select * from cm_user_dept_history where COSTCENTER_ID is not null )  cuc2
+
+    on cuc1.user_id = cuc2.user_id and cuc1.record_date < cuc2.record_date
+
+    ) v group by userId,costcenterId,fromDate;
+
+	
+	
+	
+	
+	
+	
+create or replace view v2_v_rpt_udh as
+select userId,fromDate,toDate,leafDeptNo leafDeptCode,leafDeptName,rptDeptCode,rptDeptName from(
+  select userId,deptId,fromDate,nvl2(min(toDate),min(toDate),sysdate) toDate from(
+    select cud1.user_id userId,cud1.dept_id deptId,cud1.record_date fromDate, cud2.record_date toDate from
+
+    (select * from cm_user_dept_history where dept_id is not null ) cud1
+
+    left join (select * from cm_user_dept_history where dept_id is not null )  cud2
+
+    on cud1.user_id = cud2.user_id and cud1.record_date < cud2.record_date
+
+    ) v group by userId,deptId,fromDate
+ ) udh
+
+ left join
+
+ (
+
+ select dept.Dept_No_Path leafDeptNoPath,dept.dept_no leafDeptNo,dept.dept_name leafDeptName ,
+ dept.Dept_No_Path rptDeptNoPath,dept.Dept_Code rptDeptCode,dept.Dept_Name rptDeptName
+ from cm_depart dept where dept.dept_no in (select dept_id from cm_user_dept_history)
+
+) leafDept
+
+
+ on udh.deptId = leafDept.leafDeptNo
+
+
+
+union
+
+select  userId,
+fromDate,
+nvl2(min(toDate),min(toDate) ,sysdate) toDate,
+leafDeptName leafDeptCode,
+leafDeptName,
+rptDeptName rptDeptCode,
+rptDeptName  from(
+
+select v1.userId,v1.wDate fromDate,v2.wDate toDate, v1.leafDeptName, v1.rptDeptName from
+
+(
+
+       select employeeid userId,max(work_date) wDate ,dept1 leafDeptName,dept3 rptDeptName
+       from v2_rpt_timesheetitem
+       where employeeid not in (select user_id from cm_users)
+
+       group by employeeid,dept3,dept1
+ ) v1
+
+ left join
+
+ (
+
+       select employeeid userId,max(work_date) wDate ,dept1 leafDeptName,dept3 rptDeptName
+       from v2_rpt_timesheetitem
+       where employeeid not in (select user_id from cm_users)
+
+       group by employeeid,dept3,dept1
+ ) v2
+
+on v1.userId = v2.userId and v1.wDate < v2.wDate
+
+) v group by userId,fromDate,toDate,leafDeptName,rptDeptName;
+
+
+
+
+
+
+
+
+create or replace view v2_v_rpt_usageitem as
+select ui.work_date work_date,equipmentcode,projectcode,WORK_HOURS,RATE,
+name eqName,cnName eqCnName,description eqDescription,department eqDepartment
+ from v2_rpt_usageitem ui left join (
+
+select e.*, to_date(work_date,'YYYY-MM-DD') w_date from  v2_equipment e join (
+       select code , max(to_date(work_date,'YYYY-MM-DD')) d from v2_equipment e group by e.code
+       ) mv
+
+       on e.code = mv.code and mv.d = to_date(e.work_date,'YYYY-MM-DD')
+      ) equipment
+
+      on ui.equipmentcode = equipment.code;
+

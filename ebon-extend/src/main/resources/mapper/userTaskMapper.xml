@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userTaskMapper">
+	<resultMap type="com.ebon.rpc.task.vo.TaskResource" id="taskResource">
+		<result property="taskId" column="TASKID" />
+		<result property="userTaskId" column="USERTASKID" />
+		<result property="taskType" column="TASKTYPE" />
+		<result property="status" column="STATUS" />
+		<result property="username" column="USERNAME" />
+		<result property="planTime" column="PLANTIME" />
+	</resultMap>
+	<!-- 查询项目信息根据查询条件 -->
+	<select id="getUserTaskByTaskId" parameterType="String" resultMap="taskResource">
+			SELECT USERTASK_ID	AS USERTASKID, 
+					USER_NAME			AS USERNAME, 
+					TASK_ID 			AS TASKID, 
+					TASK_TYPE 		AS TASKTYPE, 
+					U.STATUS 			AS STATUS, 
+					PLAN_TIME 			AS PLANTIME
+			  FROM CM_USERTASK U
+			  LEFT JOIN CM_USERS US ON U.USER_ID = US.USER_ID
+			  WHERE TASK_ID = #{id}
+	</select>
+</mapper>

@@ -1,0 +1,163 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/common/meta1.jsp"%>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>任务详情主页面</title>
+<script type="text/javascript" src="${path}/v3/util.js"></script>
+<script type="text/javascript">
+
+	//格式化一些值
+	$(function(){
+		 //类型
+		if('${userTask.type}'=='1'){
+			$('#type').val('计划');
+		}else if('${userTask.type}'=='2'){
+			$('#type').val('风险');
+		}else if('${userTask.type}'=='3'){
+			$('#type').val('OPL');
+		}else if('${userTask.type}'=='4'){
+			$('#type').val('分解任务');
+		}
+		 
+		 if('1'=='${userTask.agginFlag}'){
+			 $('#agginFlag').val('是');
+		 }else{
+			 $('#agginFlag').val('否');
+		 }
+		 
+		//分解任务
+		var child = '';
+		if('${userTask.childUndo}'){
+			child += '${userTask.childUndo}';
+		}
+		if('${userTask.childSum}'){
+			child += '/';
+			child += '${userTask.childSum}';
+		}
+		$('#child').val(child);
+	});
+
+	function startTask(){
+		changeStatus('2');
+	}
+	function cancleTask(){
+		changeStatus('5');
+	}
+	function approveTask(){
+		changeStatus('3');
+	}
+	function agreeTask(){
+		changeStatus('4');
+	}
+	function notAgreeTask(){//如果驳回修改为已开始,同时标记驳回
+		changeStatus('2');
+	}
+	
+	function changeStatus(status){
+		$.post('${path}/app/userTaskPlatfrom/changeStatus.action?id=${userTask.id}&status='+ status,function(data){
+			$.messager.alert('提示','操作成功');
+			parentTableReload();
+		},'json');
+	}
+	
+	function parentTableReload(){
+		parent.tableReload();//重新加载父页面状态
+		parent.getTaskMainPage('${userTask.id}');
+	}
+</script>
+</head>
+<body>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'center'"  style="height:200px;width:100%; margin: 2px 5px;">
+			<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse; width:100%;table-layout:fixed">
+				<tr>
+					<td colspan="2" width="350px;"><h3 id="tab1_info_taskName">${userTask.name }</h3></td>
+					<!-- 全部任务不显示任何按钮 -->
+					<c:if test="${1 ne type }">
+						<c:if test="${1 eq userTask.status and userTask.respUser eq userId}">
+							<td><input type="button" value="接受" onclick="startTask()" style="width:80px"></td>
+						</c:if>
+						<!-- 未开始前发包人可以取消-->
+						<c:if test="${1 eq userTask.status and userTask.assginUser eq userId}">
+							<td><input type="button" value="取消" onclick="cancleTask()" style="width:80px"></td>
+						</c:if>
+						<c:if test="${2 eq userTask.status }">
+							<td><input type="button" value="完成" onclick="approveTask()" style="width:80px"></td>
+						</c:if>
+						<!-- 且只有发包人可以看到 -->
+						<c:if test="${3 eq userTask.status and userTask.assginUser eq userId}">
+							<td><input type="button" value="通过" onclick="agreeTask()" style="width:80px"></td>
+							<td><input type="button" value="驳回" onclick="notAgreeTask()" style="width:80px"></td>
+						</c:if>
+					</c:if>
+				</tr>
+				<tr>
+					<td>责任人:</td>
+					<td>${userTask.respUserName}(${userTask.respDept})</td>
+					<td>计划工时:</td>
+					<td>${userTask.planHours}</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'south',split:true" style="height:420px;">
+			<div class="easyui-tabs" data-options="fit:true">
+				<div title="基本" data-options="closable:true">
+					<div class="easyui-panel" style="width:auto; height:auto; padding:2px 3px;">
+						基本属性
+						<hr />
+						<div style="margin-bottom:5px">
+							类型：<input class="easyui-validatebox" id="type" style="width:40%" data-options="readonly:true" readonly="readonly">
+							<c:if test="${parentUserTask.name ne null }">
+								父任务名称：<input class="easyui-validatebox" value="${parentUserTask.name }"  style="width:40%" readonly="readonly">
+							</c:if>
+						</div>
+						
+						<div style="margin-bottom:5px">
+							驳回：<input class="easyui-validatebox" id="agginFlag"  style="width:40%" readonly="readonly">
+						</div>
+						
+						相关属性
+						<hr />
+						<div style="margin-bottom:5px">
+								严重程度：<input class="easyui-validatebox" name="name" value="${userTask.seriousName }"  style="width:40%"  readonly="readonly">
+								优先级：<input class="easyui-validatebox" name="name" value="${userTask.priority }"  style="width:40%"  readonly="readonly">
+						</div>
+						<div style="margin-bottom:5px">
+								任务来源：<input class="easyui-validatebox" name="name" value="${userTask.source }"  style="width:40%"  readonly="readonly">
+						</div>
+						完成情况
+						<hr />
+						<div style="margin-bottom:5px">
+							实际开始：<input class="easyui-validatebox" value="${userTask.actStartDate }" style="width:40%"  readonly="readonly">
+							实际完成：<input class="easyui-validatebox" value="${userTask.actEndDate }" style="width:40%"  readonly="readonly">
+						</div>
+						<div style="margin-bottom:5px">
+							实际工时：<input class="easyui-validatebox" value="${userTask.actHours }"  style="width:40%"  readonly="readonly">
+							分解任务：<input class="easyui-validatebox" id="child" style="width:40%"  readonly="readonly">
+						</div>
+					</div>
+				</div>
+				<div title="项目概览" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getProjInfoPage.action?randomNum=${randomNum}&projId=${userTask.projId}" style="width:98%;height:95%;padding:0px;"></iframe>
+				</div>
+				<div title="里程碑" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getMileStonePage.action?randomNum=${randomNum}&projId=${userTask.projId}" style="width:98%;height:95%;padding:0px;"></iframe>
+				</div>
+				<div title="交付物" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getDocPage.action?randomNum=${randomNum}&userId=${userId}&taskId=${userTask.id}" style="width:98%;height:98%;"></iframe>
+				</div>
+				<!-- 子任务不可以再分解 -->
+				<c:if test="${userTask.parentId eq null }">
+					<div title="任务分解" data-options="closable:true">
+						<iframe src="${path}/v3/app/menu/task/getChildPage.action?randomNum=${randomNum}&userId=${userId}&taskId=${userTask.id}" style="width:98%;height:98%;padding:0px;"></iframe>
+					</div>
+				</c:if>
+				<div title="任务工时" id="tab1_tab15" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getCalendarPage.action?randomNum=${randomNum}&userId=${userId}&taskId=${userTask.id}" style="width:98%;height:98%;"></iframe>
+				</div>
+			</div>			
+		</div>
+	</div>
+</body>
+</html>

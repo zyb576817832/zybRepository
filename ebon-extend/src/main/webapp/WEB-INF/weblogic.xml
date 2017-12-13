@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<weblogic-web-app xmlns:wls="http://xmlns.oracle.com/weblogic/weblogic-web-app" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd http://xmlns.oracle.com/weblogic/weblogic-web-app http://xmlns.oracle.com/weblogic/weblogic-web-app/1.3/weblogic-web-app.xsd">
+    <weblogic-version>10.3.6</weblogic-version>
+    <session-descriptor>
+    	<cookie-secure>true</cookie-secure>
+    </session-descriptor>
+	<charset-params>
+		<input-charset>
+			<resource-path>/*</resource-path>
+			<java-charset-name>UTF-8</java-charset-name>
+		</input-charset>
+	</charset-params>
+    <container-descriptor>
+    	<index-directory-enabled>true</index-directory-enabled>
+    	<prefer-web-inf-classes>false</prefer-web-inf-classes>
+        <prefer-application-resources>  
+            <resource-name>META-INF/lib/javax.xml.ws.spi.Provider</resource-name>    
+        </prefer-application-resources>    
+		<show-archived-real-path-enabled>true</show-archived-real-path-enabled>
+ 		<servlet-reload-check-secs>1</servlet-reload-check-secs>
+    </container-descriptor>
+	<context-root>/uPMS</context-root>  
+</weblogic-web-app>

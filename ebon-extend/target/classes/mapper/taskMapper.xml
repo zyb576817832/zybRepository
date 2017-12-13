@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="taskMapper">
+	<resultMap type="com.ebon.rpc.task.vo.TaskInfo" id="taskInfo">
+		<result property="projectName" column="PROJECTNAME" />
+		<result property="projectCode" column="PROJECTCODE" />
+		<result property="taskId" column="TASKID" />
+		<result property="taskName" column="TASKNAME" />
+		<result property="taskType" column="TASKTYPE" />
+		<result property="taskCode" column="TASKCODE" />
+		<result property="taskStatus" column="TASKSTATUS" />
+		<result property="taskPlanStartDate" column="TASKPLANSTARTDATE" />
+		<result property="taskPlanEndDate" column="TASKPLANENDDATE" />
+		<result property="taskAclStartDate" column="TASKACLSTARTDATE" />
+		<result property="taskAclEndDate" column="TASKACLENDDATE" />
+		<result property="qaType" column="QATYPE" />
+	</resultMap>
+	
+	<resultMap type="com.ebon.rpc.task.vo.TaskInfo" id="result" extends="taskInfo">  
+        <collection property="taskResourceList" javaType="ArrayList" column="TASKID" ofType="com.ebon.rpc.task.vo.TaskResource"   
+        				select="userTaskMapper.getUserTaskByTaskId"/>  
+    </resultMap> 	
+	<!-- 查询项目信息根据查询条件 -->
+	<select id="getTaskInfo" parameterType="com.ebon.rpc.task.vo.TaskRequest" resultMap="result">
+		SELECT 
+				   P.PROJ_NAME                                               	 	AS PROJECTNAME,
+			       P.PROJ_SHORT_NAME                          				 	AS PROJECTCODE,
+			       T.TASK_ID														 	AS TASKID,
+			       T.TASK_NAME                                					 	AS TASKNAME,
+			       T.TASK_TYPE                               					 	AS TASKTYPE,
+			       T.TASK_CODE                              						 	AS TASKCODE,
+			       T.STATUS                                    					 	AS TASKSTATUS,
+			       TO_CHAR(T.PLAN_START_DATE, 'YYYY-MM-DD')    	 	AS TASKPLANSTARTDATE,
+			       TO_CHAR(T.PLAN_END_DATE, 'YYYY-MM-DD')         	AS TASKPLANENDDATE,
+			       TO_CHAR(T.ACTUAL_START_DATE, 'YYYY-MM-DD') 	AS TASKACLSTARTDATE,
+			       TO_CHAR(T.ACTUAL_END_DATE, 'YYYY-MM-DD')     	AS TASKACLENDDATE 
+			 FROM CM_TASK T 
+			  LEFT JOIN CM_PROJ P ON T.PROJ_ID = P.PROJ_OBJECT_ID AND P.PROJ_NODE_FLAG = 'Y'
+			  LEFT JOIN CM_PROJWBS W ON T.WBS_ID = W.WBS_ID 
+		<where>
+			<if test="extendFields != null">
+				AND ${extendFields} 
+			</if>
+			<if test="wbsName != null">
+				AND W.WBS_NAME LIKE '%'||#{wbsName}||'%' 
+			</if>
+			<if test="taskName != null">
+				AND T.TASK_NAME LIKE '%'||#{taskName}||'%' 
+			</if>
+			<if test="projectName != null">
+				AND P.PROJ_NAME = #{projectName} 
+			</if>
+  				AND P.PROJ_SHORT_NAME = #{projectCode} 
+		</where>
+	</select>
+	<select id="getTaskInfoForQA" parameterType="com.ebon.rpc.task.vo.TaskRequest" resultMap="result">
+		SELECT 
+			 	 P.PROJ_NAME                                                   		AS PROJECTNAME,
+	             P.PROJ_SHORT_NAME                                   			AS PROJECTCODE,
+	             T.TASK_ID                                           					AS TASKID,
+	             T.TASK_NAME                                          			 	AS TASKNAME,
+	             T.TASK_TYPE                                          				AS TASKTYPE,
+	             T.TASK_CODE                                           				AS TASKCODE,
+	             T.SHORT_NAME		                                      			AS QATYPE,
+	             T.STATUS                                               				AS TASKSTATUS,
+	             TO_CHAR(T.PLAN_START_DATE, 'YYYY-MM-DD')       	AS TASKPLANSTARTDATE,
+	             TO_CHAR(T.PLAN_END_DATE, 'YYYY-MM-DD')         		AS TASKPLANENDDATE,
+	             TO_CHAR(T.ACTUAL_START_DATE, 'YYYY-MM-DD')  		AS TASKACLSTARTDATE,
+	             TO_CHAR(T.ACTUAL_END_DATE, 'YYYY-MM-DD')      		AS TASKACLENDDATE 
+	        FROM CM_TASK_QA T 
+	        LEFT JOIN CM_PROJ P ON T.PROJ_ID = P.PROJ_OBJECT_ID AND P.PROJ_NODE_FLAG = 'Y'
+	        LEFT JOIN CM_PROJWBS W ON T.WBS_ID = W.WBS_ID 
+		<where>
+			<if test="extendFields != null">
+				AND ${extendFields} 
+			</if>
+			<if test="wbsName != null">
+				AND W.WBS_NAME LIKE '%'||#{wbsName}||'%' 
+			</if>
+			<if test="taskName != null">
+				AND T.TASK_NAME LIKE '%'||#{taskName}||'%' 
+			</if>
+			<if test="projectName != null">
+				AND P.PROJ_NAME = #{projectName} 
+			</if>
+  				AND P.PROJ_SHORT_NAME = #{projectCode} 
+  				AND T.SHORT_NAME IS NOT NULL 
+		</where>
+	</select>
+</mapper>

@@ -1,0 +1,49 @@
+package com.ebon.platform.dao.dialect;
+
+import com.ebon.platform.dao.pager.Page;
+
+
+public class OracleDialect extends Dialect {
+
+	@Override
+	public String getLimitSql(String sql, Page page) {
+		sql = sql.toUpperCase().trim();
+		StringBuffer pageSql = new StringBuffer();
+		pageSql.append("select * from (select tmp_tb.*, ROWNUM row_id from (");
+		
+		String sort = page.getSort();
+		String order = page.getOrder();
+		if(null != sort && sort.trim().length() > 0 && null != order && order.trim().length() > 0){
+			StringBuffer orderSql = new StringBuffer();
+			if(sql.contains("ORDER BY")){
+				String[] sqls = sql.split("ORDER BY");
+				orderSql.append(sqls[0]);
+				orderSql.append(" ORDER BY ");
+				orderSql.append(sort);
+				orderSql.append(" ");
+			} else {
+				orderSql.append(sql);
+				orderSql.append(" ORDER BY ");
+				orderSql.append(sort);
+				orderSql.append(" ");
+				//orderSql.append(order);QX 20171126 重复
+			}
+			orderSql.append(order);
+			pageSql.append(orderSql);
+		} else {
+			pageSql.append(sql);
+		}
+		pageSql.append(") tmp_tb where ROWNUM <= ");
+		pageSql.append(page.getCurrentResult() + page.getRows());
+		pageSql.append(") where row_id > ");
+		pageSql.append(page.getCurrentResult());
+		
+		return pageSql.toString();
+	}
+
+	@Override
+	public String getCountSql(String sql) {
+		String countSql = "select count(0) from (" + sql + ") tmp_count";
+		return countSql;
+	}
+}

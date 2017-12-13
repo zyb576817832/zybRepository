@@ -1,0 +1,894 @@
+--新建的11张表，从数据库直接copy出来的DDL
+--之前两张修改表从数据库copy出来的DDL
+
+create table V2_EAI_PROJECTINFO
+(
+  id            VARCHAR2(50) default sys_guid() not null,
+  projectcode   VARCHAR2(50),
+  projectname   VARCHAR2(50),
+  projecttype   VARCHAR2(50),
+  ph1           VARCHAR2(50),
+  ph2           VARCHAR2(50),
+  numberb       VARCHAR2(50),
+  numbero       VARCHAR2(50),
+  projectpm     VARCHAR2(50),
+  customercode  VARCHAR2(50),
+  customername  VARCHAR2(50),
+  sop           DATE,
+  createdate    DATE,
+  csop          VARCHAR2(50),
+  customerabbr  VARCHAR2(50),
+  projectsize   VARCHAR2(50),
+  projectstage  VARCHAR2(50),
+  projectstatus VARCHAR2(50),
+  sapname       VARCHAR2(50),
+  commandid     VARCHAR2(50)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+  
+  alter table V2_EAI_PROJECTINFO
+  add primary key (ID)
+  using index 
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+
+
+
+-- Create table
+create table V2_EAI_COMMAND
+(
+  id          VARCHAR2(32) not null,
+  type        NUMBER,
+  startdate   VARCHAR2(200),
+  data        BLOB,
+  status      NUMBER,
+  sendedtime  VARCHAR2(200),
+  description VARCHAR2(2000),
+  comments    VARCHAR2(50)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 8
+    minextents 1
+    maxextents unlimited
+  );
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_EAI_COMMAND
+  add constraint V2_COMMAND_ID primary key (ID)
+  using index 
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+-- Create/Recreate check constraints 
+alter table V2_EAI_COMMAND
+  add constraint PK_COMMAND_STATUS
+  check (status=0 or status=1);
+alter table V2_EAI_COMMAND
+  add constraint PK_COMMAND_TYPE
+  check (TYPE=0 or TYPE=1);
+
+
+  
+  
+  
+
+-- Create table
+create table V2_EAI_LIMS_PROJECTINFOCOMMAND
+(
+  status      NUMBER,
+  description VARCHAR2(1500),
+  sendeddate  DATE,
+  id          VARCHAR2(32)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 8
+    minextents 1
+    maxextents unlimited
+  );
+
+  
+  
+ 
+ -- Create table
+create table V2_EQUIPMENT
+(
+  id          VARCHAR2(100) default sys_guid() not null,
+  code        VARCHAR2(100),
+  name        VARCHAR2(100),
+  cnname      VARCHAR2(100),
+  description VARCHAR2(100),
+  department  VARCHAR2(100),
+  work_date   VARCHAR2(100),
+  usage_id    VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+  
+  
+
+-- Create table
+create table V2_RPT_TIMESHEETITEM
+(
+  id           VARCHAR2(100) default sys_guid() not null,
+  work_date    DATE,
+  employeeid   VARCHAR2(100),
+  projectcode  VARCHAR2(100),
+  work_hours   NUMBER,
+  dept2        VARCHAR2(100),
+  dept3        VARCHAR2(100),
+  dept1        VARCHAR2(100),
+  timesheet_id VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+  
+  
+  
+  -- Create table
+create table V2_RPT_USAGEITEM
+(
+  id            VARCHAR2(100) default sys_guid() not null,
+  work_date     DATE,
+  equipmentcode VARCHAR2(100),
+  projectcode   VARCHAR2(100),
+  work_hours    NUMBER,
+  rate          NUMBER,
+  usage_id      VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+
+  
+  
+  
+ -- Create table
+create table V2_TIMESHEET
+(
+  id        VARCHAR2(100) not null,
+  startdate VARCHAR2(100),
+  commandid VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_TIMESHEET
+  add constraint TIMESHEET_ID primary key (ID)
+  using index 
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+
+  
+  
+  -- Create table
+create table V2_TIMESHEETITEM
+(
+  id           VARCHAR2(100) default sys_guid() not null,
+  work_date    VARCHAR2(100),
+  employeeid   VARCHAR2(100),
+  projectcode  VARCHAR2(100),
+  work_hours   NUMBER,
+  dept2        VARCHAR2(100),
+  dept3        VARCHAR2(100),
+  dept1        VARCHAR2(100),
+  timesheet_id VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_TIMESHEETITEM
+  add constraint TIMESHEETITEM_ID primary key (ID)
+  using index 
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+
+  
+  
+ -- Create table
+create table V2_USAGE
+(
+  id        VARCHAR2(100) not null,
+  startdate VARCHAR2(100),
+  commandid VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+  
+  
+-- Create table
+create table V2_USAGEITEM
+(
+  id            VARCHAR2(100) default sys_guid() not null,
+  work_date     VARCHAR2(100),
+  equipmentcode VARCHAR2(100),
+  projectcode   VARCHAR2(100),
+  work_hours    NUMBER,
+  rate          NUMBER,
+  usage_id      VARCHAR2(100)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+
+
+
+-- Create table
+create table V2_EAI_PROJECT
+(
+  id           VARCHAR2(50) default sys_guid() not null,
+  project_code VARCHAR2(50) not null,
+  editdate     DATE not null
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 8
+    minextents 1
+    maxextents unlimited
+  );
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table V2_EAI_PROJECT
+  add primary key (ID)
+  using index 
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+  
+  
+
+-- Create table
+create table CM_PROJ
+(
+  wid               VARCHAR2(40) default sys_guid() not null,
+  proj_id           VARCHAR2(40) default sys_guid() not null,
+  proj_short_name   VARCHAR2(60 CHAR) default '',
+  proj_name         VARCHAR2(100 CHAR) default '' not null,
+  proj_node_flag    VARCHAR2(1 CHAR) default 'Y' not null,
+  proj_type         VARCHAR2(40 CHAR),
+  proj_size         VARCHAR2(40 CHAR),
+  proj_stage        VARCHAR2(40 CHAR),
+  contract_title    VARCHAR2(40 CHAR),
+  job_number        VARCHAR2(40 CHAR),
+  site_location     VARCHAR2(40 CHAR),
+  project_value     NUMBER(17,2) default 0 not null,
+  status            VARCHAR2(40 CHAR),
+  parent_proj_id    VARCHAR2(40),
+  description       VARCHAR2(1000 CHAR),
+  proceed_date      DATE,
+  completion_date   DATE,
+  contract_date     DATE,
+  project_currency  VARCHAR2(10 CHAR),
+  prim_proj_id      VARCHAR2(40),
+  kks_type_id       VARCHAR2(40),
+  vnmt_id           VARCHAR2(40),
+  created_by        VARCHAR2(40),
+  created_date      DATE default sysdate not null,
+  seq_num           NUMBER default 0,
+  ms_user_id        VARCHAR2(40),
+  proj_cmpt_pct     VARCHAR2(20 CHAR),
+  parent_path       VARCHAR2(4000 CHAR),
+  sumy              CLOB,
+  proj_pm           VARCHAR2(40 CHAR),
+  sponsor           VARCHAR2(40 CHAR),
+  account_no        VARCHAR2(40 CHAR),
+  cost_inter        NUMBER(17,2) default 0,
+  cost_exter        NUMBER(17,2) default 0,
+  investment        NUMBER(17,2) default 0,
+  subject           VARCHAR2(1000 CHAR),
+  sod               DATE,
+  sop               DATE,
+  specialitems      CLOB,
+  approved_by       VARCHAR2(40),
+  approved_date     DATE default sysdate not null,
+  manual_status     VARCHAR2(40 CHAR) default '新建',
+  meet_team         VARCHAR2(40),
+  meet_rbo          VARCHAR2(40),
+  meet_sbo          VARCHAR2(40),
+  proj_object_id    NUMBER,
+  orig_proj_id      VARCHAR2(40),
+  proj_value        NUMBER(17,2) default 0,
+  doclibtemplate_id VARCHAR2(40 CHAR),
+  methodology_id    VARCHAR2(40 CHAR),
+  risktemplate_id   VARCHAR2(40 CHAR),
+  proj_open_flag    VARCHAR2(1) default 'N' not null,
+  currentprocess    VARCHAR2(40 CHAR),
+  sales             VARCHAR2(40 CHAR),
+  proj_sys_type     VARCHAR2(40 CHAR),
+  base_version      NUMBER default 0 not null,
+  obs_id            VARCHAR2(40 CHAR),
+  ps_owner          VARCHAR2(40),
+  ph1               VARCHAR2(40),
+  ph2               VARCHAR2(40),
+  vehicle           VARCHAR2(200),
+  engine            VARCHAR2(200),
+  tech_ctgry_1      VARCHAR2(40),
+  hnte              VARCHAR2(40),
+  proj_emission     VARCHAR2(40),
+  proj_trsmn        VARCHAR2(40),
+  proj_immo         VARCHAR2(40 CHAR),
+  customer_type     VARCHAR2(40 CHAR),
+  customer          VARCHAR2(40 CHAR),
+  eng_para_c        VARCHAR2(200 CHAR),
+  eng_para_v        VARCHAR2(200 CHAR),
+  eng_para_d        VARCHAR2(200 CHAR),
+  tech_throttle     VARCHAR2(40 CHAR),
+  tech_mafm         VARCHAR2(40 CHAR),
+  competitor        VARCHAR2(200 CHAR),
+  volumn_1          VARCHAR2(200 CHAR),
+  volumn_2          VARCHAR2(200 CHAR),
+  volumn_3          VARCHAR2(200 CHAR),
+  market            VARCHAR2(200),
+  possibility       VARCHAR2(200),
+  base_isready      VARCHAR2(8) default 'false',
+  gearbox           VARCHAR2(200),
+  gearbox_type      VARCHAR2(200),
+  systemno          VARCHAR2(40),
+  mixpowertype      VARCHAR2(40),
+  motono            VARCHAR2(40),
+  ectype            VARCHAR2(40),
+  motionsystype     VARCHAR2(40),
+  eop               DATE,
+  newcomponent      VARCHAR2(40),
+  remark            VARCHAR2(500),
+  internalorder     VARCHAR2(40),
+  timelight         VARCHAR2(40),
+  qualitylight      VARCHAR2(40),
+  budgetlight       VARCHAR2(40),
+  costlight         VARCHAR2(40),
+  customer_abbr     VARCHAR2(40),
+  customer_no       VARCHAR2(40),
+  ceop              DATE,
+  csop              DATE,
+  csod              DATE,
+  engineplant       VARCHAR2(400),
+  cu_develop        VARCHAR2(40),
+  be_project        VARCHAR2(40),
+  sys_manager       VARCHAR2(40),
+  extend_proj_no    VARCHAR2(40),
+  start_date        DATE,
+  end_date          DATE,
+  audit_status      CHAR(1),
+  proj_basenum      VARCHAR2(40),
+  proj_ecnum        VARCHAR2(40),
+  proj_source       VARCHAR2(40),
+  udf_level         VARCHAR2(40),
+  udf_develop       VARCHAR2(2000),
+  udf_year          VARCHAR2(40),
+  qa_level          CHAR(1),
+  cbu_no            VARCHAR2(40),
+  iscbu             CHAR(1) default 0
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 104K
+    next 8K
+    minextents 1
+    maxextents unlimited
+  );
+-- Add comments to the table 
+comment on table CM_PROJ
+  is '项目/EPS主表';
+-- Add comments to the columns 
+comment on column CM_PROJ.proj_short_name
+  is '项目编号';
+comment on column CM_PROJ.proj_name
+  is '项目名称';
+comment on column CM_PROJ.proj_node_flag
+  is 'Y表示项目,N表示EPS';
+comment on column CM_PROJ.proj_type
+  is '项目类型，参见CM_CODETYPE';
+comment on column CM_PROJ.proj_size
+  is '项目级别，参见CM_CODETYPE';
+comment on column CM_PROJ.proj_stage
+  is '项目阶段，参见CM_CODETYPE';
+comment on column CM_PROJ.site_location
+  is '所在地理位置';
+comment on column CM_PROJ.status
+  is '项目状态，NEW/	是指立项前的状态；PLANNING/是指打基线前的状态；RUNNING/是指项目关闭前的状态；CLOSED/是指项目关闭；CANCEL/是指项目中止；INACTIVE/是指项目暂停的状态';
+comment on column CM_PROJ.parent_proj_id
+  is 'EPS ID';
+comment on column CM_PROJ.description
+  is '项目描述';
+comment on column CM_PROJ.completion_date
+  is '项目完成日期要求';
+comment on column CM_PROJ.project_currency
+  is '项目货币结算类型';
+comment on column CM_PROJ.prim_proj_id
+  is '主项目，针对ECU/Component项目而言就是系统项目';
+comment on column CM_PROJ.created_by
+  is '创建人';
+comment on column CM_PROJ.created_date
+  is '创建日期';
+comment on column CM_PROJ.seq_num
+  is '序号';
+comment on column CM_PROJ.parent_path
+  is 'EPS路径';
+comment on column CM_PROJ.sumy
+  is '备注';
+comment on column CM_PROJ.proj_pm
+  is '项目经理';
+comment on column CM_PROJ.sponsor
+  is 'Internal Customer ID';
+comment on column CM_PROJ.account_no
+  is '项目账号';
+comment on column CM_PROJ.subject
+  is '标题';
+comment on column CM_PROJ.sod
+  is '项目开始开发日期';
+comment on column CM_PROJ.sop
+  is '项目开始排产日期';
+comment on column CM_PROJ.specialitems
+  is '特殊描述';
+comment on column CM_PROJ.approved_by
+  is '审批人';
+comment on column CM_PROJ.approved_date
+  is '审批日期';
+comment on column CM_PROJ.manual_status
+  is '项目手册状态';
+comment on column CM_PROJ.meet_team
+  is '项目组会议规则';
+comment on column CM_PROJ.meet_rbo
+  is 'RBO会议规则';
+comment on column CM_PROJ.meet_sbo
+  is 'SBO会议规则';
+comment on column CM_PROJ.proj_object_id
+  is 'PROJ OBJECT ID 对应Oracle P6里的项目Key';
+comment on column CM_PROJ.orig_proj_id
+  is '基线项目对应的源项目';
+comment on column CM_PROJ.proj_value
+  is '预算';
+comment on column CM_PROJ.doclibtemplate_id
+  is '文档模板ID';
+comment on column CM_PROJ.methodology_id
+  is '计划模板ID';
+comment on column CM_PROJ.risktemplate_id
+  is '风险模板ID';
+comment on column CM_PROJ.proj_open_flag
+  is 'Y表示系统后台默认打开';
+comment on column CM_PROJ.currentprocess
+  is '启动过程步骤ID';
+comment on column CM_PROJ.sales
+  is '主项目的销售';
+comment on column CM_PROJ.proj_sys_type
+  is '内部系统类型，包括：SYS:系统项目; SYS.ECU:系统ECU项目；SYS.COMP:系统零部件项目；PLAT.ECU:ECU平台项目；PLAT.COMP:零部件平台项目';
+comment on column CM_PROJ.base_version
+  is '基线版本';
+comment on column CM_PROJ.obs_id
+  is '对应的项目组织';
+comment on column CM_PROJ.ps_owner
+  is 'PS单所有者';
+comment on column CM_PROJ.ph1
+  is 'Project Hiberarchy 1';
+comment on column CM_PROJ.ph2
+  is 'Project Hiberarchy 2';
+comment on column CM_PROJ.vehicle
+  is '车型';
+comment on column CM_PROJ.engine
+  is '发动机型号';
+comment on column CM_PROJ.tech_ctgry_1
+  is 'Tech Category (技术分类，三新)';
+comment on column CM_PROJ.hnte
+  is '高新技术企业分类';
+comment on column CM_PROJ.proj_emission
+  is '项目排放标准';
+comment on column CM_PROJ.proj_trsmn
+  is '项目排挡信息';
+comment on column CM_PROJ.proj_immo
+  is '项目防盗信息';
+comment on column CM_PROJ.customer_type
+  is '客户类型';
+comment on column CM_PROJ.customer
+  is '客户';
+comment on column CM_PROJ.eng_para_c
+  is 'Engine Parameter Cylinder';
+comment on column CM_PROJ.eng_para_v
+  is 'Engine Parameter Valves';
+comment on column CM_PROJ.eng_para_d
+  is 'Engine Parameter Displacement';
+comment on column CM_PROJ.tech_throttle
+  is '节气门类型';
+comment on column CM_PROJ.tech_mafm
+  is '进气方式';
+comment on column CM_PROJ.competitor
+  is '竞争者系统';
+comment on column CM_PROJ.volumn_1
+  is '第一年销售数量';
+comment on column CM_PROJ.volumn_2
+  is '第二年销售数量';
+comment on column CM_PROJ.volumn_3
+  is '第三年销售数量';
+comment on column CM_PROJ.market
+  is '市场';
+comment on column CM_PROJ.possibility
+  is '项目可行性';
+comment on column CM_PROJ.base_isready
+  is '是否独立计划编制完成准备打基线';
+comment on column CM_PROJ.gearbox
+  is '变速箱厂';
+comment on column CM_PROJ.gearbox_type
+  is '变速箱类型';
+comment on column CM_PROJ.systemno
+  is '系统代号';
+comment on column CM_PROJ.mixpowertype
+  is '混合动力标志';
+comment on column CM_PROJ.motono
+  is '驱动电机个数';
+comment on column CM_PROJ.ectype
+  is '电动汽车分类';
+comment on column CM_PROJ.motionsystype
+  is '动力系统种类';
+comment on column CM_PROJ.remark
+  is '备注';
+comment on column CM_PROJ.internalorder
+  is 'SAP内部订单号';
+comment on column CM_PROJ.timelight
+  is '进度灯：1 - 绿，2 - 黄，3 - 红';
+comment on column CM_PROJ.qualitylight
+  is '质量灯：1 - 绿，2 - 黄，3 - 红';
+comment on column CM_PROJ.budgetlight
+  is '预算灯：1 - 绿，2 - 黄，3 - 红';
+comment on column CM_PROJ.costlight
+  is '成本灯：1 - 绿，2 - 黄，3 - 红';
+comment on column CM_PROJ.customer_abbr
+  is '客户缩写';
+comment on column CM_PROJ.customer_no
+  is '客户代码';
+comment on column CM_PROJ.ceop
+  is '客户的SOP';
+comment on column CM_PROJ.csop
+  is '客户的SOD';
+comment on column CM_PROJ.csod
+  is '客户的EOP';
+comment on column CM_PROJ.engineplant
+  is 'EnginePlant';
+comment on column CM_PROJ.cu_develop
+  is 'CU develop    0 - 否，1 - 是';
+comment on column CM_PROJ.be_project
+  is 'PH1的BE_PROJECT   BCS；VSS';
+comment on column CM_PROJ.sys_manager
+  is '项目经理的经理';
+comment on column CM_PROJ.extend_proj_no
+  is '集成的项目编号';
+comment on column CM_PROJ.start_date
+  is '项目最早时间';
+comment on column CM_PROJ.end_date
+  is '项目最晚时间';
+comment on column CM_PROJ.audit_status
+  is ' 审核状态   0-未审核, 1-审核中';
+comment on column CM_PROJ.udf_year
+  is '其他项目年份';
+comment on column CM_PROJ.qa_level
+  is '0: 正常;1: Mini';
+comment on column CM_PROJ.cbu_no
+  is '用来存储CBU号';
+comment on column CM_PROJ.iscbu
+  is '是否为CBU项目，0为false，1为true';
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table CM_PROJ
+  add constraint PK_CM_PROJ primary key (PROJ_ID)
+  using index 
+  tablespace EBONDB_NDX1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 32K
+    next 32K
+    minextents 1
+    maxextents unlimited
+  );
+-- Create/Recreate indexes 
+create index NDX_PROJ_OBJECTID on CM_PROJ (PROJ_OBJECT_ID)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NDX_PROJ_OBSID on CM_PROJ (OBS_ID)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NDX_PROJ_ORIGPROJID on CM_PROJ (ORIG_PROJ_ID)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NDX_PROJ_OTHER on CM_PROJ (PROJ_TYPE, PROJ_STAGE, STATUS, PROJ_SYS_TYPE, BASE_VERSION)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NDX_PROJ_PARENTPROJID on CM_PROJ (PARENT_PROJ_ID, PRIM_PROJ_ID, PROJ_OBJECT_ID, ORIG_PROJ_ID, OBS_ID)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NDX_PROJ_PROJSHORTNAME on CM_PROJ (PROJ_SHORT_NAME, PROJ_NODE_FLAG, BASE_VERSION)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NDX_PROJ_PROJTYPE on CM_PROJ (PROJ_TYPE)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index NUX_PROJ_OBJECTID on CM_PROJ (PROJ_OBJECT_ID, PROJ_NODE_FLAG)
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+
+  
+ 
+ 
+ 
+ 
+  
+  
+-- 增加PH2和customer 
+  
+ -- Create table
+create table TS_RESOURCEHOUR
+(
+  wid              VARCHAR2(40) default sys_guid() not null,
+  resourcehour_id  VARCHAR2(40) default sys_guid() not null,
+  usertask_id      VARCHAR2(40) not null,
+  timesheet_date   DATE,
+  unapproved_hours NUMBER(7,1),
+  approved_hours   NUMBER(7,1),
+  approve_flag     CHAR(1),
+  bu_tag           VARCHAR2(40),
+  sheet_order      NUMBER,
+  period_id        VARCHAR2(40),
+  update_date      DATE default sysdate not null,
+  create_date      DATE default sysdate not null,
+  customer_name    VARCHAR2(32),
+  ph2              VARCHAR2(32)
+)
+tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64
+    next 1
+    minextents 1
+    maxextents unlimited
+  );
+-- Add comments to the table 
+comment on table TS_RESOURCEHOUR
+  is '工时单报工记录';
+-- Add comments to the columns 
+comment on column TS_RESOURCEHOUR.usertask_id
+  is '对应的报工任务';
+comment on column TS_RESOURCEHOUR.timesheet_date
+  is '报工日，1900年1月1日到次日的天数';
+comment on column TS_RESOURCEHOUR.unapproved_hours
+  is '待批准的工时';
+comment on column TS_RESOURCEHOUR.approved_hours
+  is '批准的工时(以这个值为准)';
+comment on column TS_RESOURCEHOUR.approve_flag
+  is '批准标志，1：完成批准；0：未完成批准';
+comment on column TS_RESOURCEHOUR.bu_tag
+  is '事业部标签';
+comment on column TS_RESOURCEHOUR.sheet_order
+  is '在这个报工区间的日期排序';
+comment on column TS_RESOURCEHOUR.period_id
+  is '对应的报工区间';
+comment on column TS_RESOURCEHOUR.update_date
+  is '记录更新日期';
+comment on column TS_RESOURCEHOUR.create_date
+  is '记录创建日期';
+comment on column TS_RESOURCEHOUR.customer_name
+  is '非项目型的客户';
+comment on column TS_RESOURCEHOUR.ph2
+  is 'PH2';
+-- Create/Recreate primary, unique and foreign key constraints 
+alter table TS_RESOURCEHOUR
+  add constraint RESOURCEHOUR_ID primary key (RESOURCEHOUR_ID)
+  using index 
+  tablespace EBONDB_DAT1
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+ 
+

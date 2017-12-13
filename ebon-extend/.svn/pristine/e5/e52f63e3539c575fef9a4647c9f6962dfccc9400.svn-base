@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.appUserHours">
+
+	<insert id="add" parameterType="com.ebon.v3.vo.AppUserHours">
+		INSERT INTO APP_USER_HOURS(
+			USER_ID,
+			REGIST_DATE,
+			<if test="taskId != null">TASK_ID,</if>
+			REGIST_HOURS
+		) VALUES(
+			#{userId},
+			TO_DATE(#{registDate},'YYYY-MM-DD'),
+			<if test="taskId != null">#{taskId},</if>
+			#{registHours}
+		)
+	</insert>
+	
+	<delete id="deleteByDate" parameterType="map">
+		DELETE FROM APP_USER_HOURS
+		WHERE USER_ID = #{userId}
+		AND TRUNC(REGIST_DATE) = TRUNC(to_date(#{registDate},'YYYY-MM-DD'))
+	</delete>
+	
+	<update id="update" parameterType="com.ebon.v3.vo.AppUserHours">
+		UPDATE APP_USER_HOURS SET REGIST_HOURS = #{registHours}
+		<where>
+			ID = #{id}
+		</where>
+	</update>
+
+</mapper>

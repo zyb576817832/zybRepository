@@ -1,0 +1,82 @@
+<?xml version="1.0" standalone="yes" ?>
+<DataSet>
+  <Table>
+    <A>2015-02-02</A>
+    <B>038/BE/001-DR 1</B>
+    <C>2464</C>
+    <D>EMC测试设备</D>
+    <E>非MAE</E>
+    <F>NE4</F>
+    <G>0.033</G>
+    <H>1200</H>
+  </Table>
+  <Table>
+    <A>2015-02-02</A>
+    <B>038/BE/001-DR 1</B>
+    <C>2464</C>
+    <D>EMC测试设备</D>
+    <E>非MAE</E>
+    <F>NE4</F>
+    <G>0.05</G>
+    <H>1200</H>
+  </Table>
+  <Table>
+    <A>2015-02-02</A>
+    <B>038/EMS/002</B>
+    <C>2464</C>
+    <D>EMC测试设备</D>
+    <E>非MAE</E>
+    <F>NE4</F>
+    <G>0.033</G>
+    <H>1200</H>
+  </Table>
+  <Table>
+    <A>2015-02-11</A>
+    <B>388/3410ET.1-ECU DI 0</B>
+    <C>3411</C>
+    <D>(重庆)轻型汽车转鼓</D>
+    <F>NE3</F>
+    <G>1</G>
+    <H>0</H>
+  </Table>
+  <Table>
+    <A>2015-02-12</A>
+    <B>388/3410ET.1-ECU DI 0</B>
+    <C>3411</C>
+    <D>(重庆)轻型汽车转鼓</D>
+    <F>NE3</F>
+    <G>1</G>
+    <H>0</H>
+  </Table>
+  <Table>
+    <A>2015-02-13</A>
+    <B>388/3410ET.1-ECU DI 0</B>
+    <C>3411</C>
+    <D>(重庆)轻型汽车转鼓</D>
+    <F>NE3</F>
+    <G>1</G>
+    <H>0</H>
+  </Table>
+  <Table>
+    <A>2015-02-27</A>
+    <B>989/CF26504-ECU FI 0</B>
+    <C>3402</C>
+    <D>(重庆)摩托车转鼓</D>
+    <F>NE3</F>
+    <G>5</G>
+    <H>0</H>
+  </Table>
+  <Table>
+    <A>2015-03-03</A>
+    <B>405/EMS/002-HDEV 1</B>
+    <C>2469</C>
+    <D>防水试验箱</D>
+    <E>Water spray test bench</E>
+    <F>NE4</F>
+    <G>1</G>
+    <H>1600</H>
+  </Table>
+  <Table>
+    <A>2015-02-01</A>
+  </Table>
+</DataSet>

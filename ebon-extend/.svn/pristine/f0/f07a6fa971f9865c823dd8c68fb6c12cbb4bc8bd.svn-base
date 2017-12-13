@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="personCostMapper">
+	<resultMap type="HashMap" id="personMap">
+		<result property="projectInfoId" column="PROJ_CODE" />
+		<result property="personelCostCenter" column="COSTCENTER_NAME" />
+		<result property="personelHourRate" column="COST_RADIO" />
+		<result property="personelHour" column="HOURS" />
+		<result property="personelDeptName" column="DEPT_NAME" />
+		<result property="personelId" column="PERSON_CODE"/>
+	</resultMap>
+	<select id="getPersonelInfo" parameterType="HashMap" resultMap="personMap">
+		SELECT 
+		      P.PROJ_SHORT_NAME         AS PROJ_CODE, 
+		      CC.NAME             AS COSTCENTER_NAME, 
+		      DT.DEPT_NAME           AS DEPT_NAME, 
+		      RH.APPROVED_HOURS        AS HOURS ,
+		      U.EMPLOYEE_ID           AS PERSON_CODE,
+		      CCR.RADIO             AS COST_RADIO 
+	    	  FROM TS_RESOURCEHOUR RH 
+	    LEFT JOIN CM_USERTASK UT ON RH.USERTASK_ID = UT.USERTASK_ID AND UT.TASK_TYPE = 'PROJECT'
+	    LEFT JOIN CM_USERS U ON UT.USER_ID = U.USER_ID 
+	    LEFT JOIN CM_USER_DEPT_HISTORY UDH ON U.USER_ID = UDH.USER_ID 
+	       		AND RH.TIMESHEET_DATE >= UDH.RECORD_DATE 
+	       		AND (RH.TIMESHEET_DATE <![CDATA[<]]> UDH.EXPIRE_DATE OR UDH.EXPIRE_DATE IS NULL) 
+	    LEFT JOIN CM_COSTCENTER_RADIO CCR ON CCR.COSTCENTER_ID = UDH.COSTCENTER_ID 
+	       		AND RH.TIMESHEET_DATE >= CCR.START_DATE 
+	       		AND (RH.TIMESHEET_DATE <![CDATA[<]]> CCR.END_DATE OR CCR.END_DATE IS NULL) 
+	   LEFT JOIN CM_COSTCENTER CC ON CC.ID = UDH.COSTCENTER_ID 
+	   LEFT JOIN CM_DEPART DT ON DT.DEPT_NO = UDH.DEPT_ID 
+	   LEFT JOIN CM_TASK T ON UT.TASK_ID = TO_CHAR(T.TASK_ID) 
+	   LEFT JOIN CM_PROJ P ON T.PROJ_ID = P.PROJ_OBJECT_ID 
+   	   WHERE P.PROJ_SHORT_NAME IS NOT NULL AND P.PROJ_NODE_FLAG='Y'
+   	   	   AND RH.TIMESHEET_DATE >= TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+           AND RH.TIMESHEET_DATE <![CDATA[<]]>= TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	</select>
+</mapper>

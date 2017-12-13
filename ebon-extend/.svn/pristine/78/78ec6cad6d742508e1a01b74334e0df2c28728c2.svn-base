@@ -1,0 +1,52 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/common/meta1.jsp"%>
+<html>
+<head>
+<title>我的工时-添加工时</title>
+<script type="text/javascript">
+	function submitForm(){
+		var hours = $("#registHours").val();
+		if(hours > 24){
+			$.messager.alert('提示','填报失败，不能超过24小时');
+			return;
+		}
+		$('#ff').form('submit', {    
+		    url:'${path}/app/userHours/add.action?userId=${userId}',    
+		    success:function(data){    
+		    	$.messager.alert('提示','操作成功');
+		    	var topUrl = window.document.referrer +'&registDate=${registDate}';
+				parent.location.href = topUrl;
+		    	parent.onSelectDateFn(null, '${registDate}');
+		    }    
+		}); 
+	}
+	
+	function aotoRegist(){
+		var url = '${path}/app/userHours/aotoRegist.action?taskIds=${taskIds}&userId=${userId}&registDate=${registDate}';
+		$.post(url, function(data){
+			$.messager.alert('提示','操作成功');
+			var topUrl = window.document.referrer +'&registDate=${registDate}';
+			parent.location.href = topUrl;
+	    	parent.onSelectDateFn(null, '${registDate}');
+		},'json');
+	}
+</script>
+</head>
+<body>
+	<h2>报工</h2>
+	<p>注意：请填入实际工作时间，如果不填系统默认分配8小时，后续只可手工修改一次.</p>
+	<form id="ff" method="post">
+		<input name="taskIds" type="hidden" value="${taskIds}">
+		<div style="margin-bottom:20px">
+			填报日期：<input class="easyui-datebox" name="registDate" style="width:200px;" data-options="required:true" value="${registDate}">
+		</div>
+		<div style="margin-bottom:20px">
+			填报工时：<input id="registHours" class="easyui-numberbox" name="registHours" style="width:200px;" data-options="required:true">
+		</div>
+	</form>
+	<div style="text-align:center;padding:5px 0">
+		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()">Submit</a>
+		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="aotoRegist()">模拟定时</a>
+	</div>
+</body>
+</html>

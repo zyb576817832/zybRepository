@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.appUserHours">
+	<resultMap type="com.ebon.v3.dto.VAppUserHours" id="appUserHoursMap">
+		<id property="id" column="ID"/>
+		<result property="userId" column="USER_ID"/>
+		<result property="registDate" column="REGIST_DATE"/>
+		<result property="taskId" column="TASK_ID"/>
+		<result property="registHours" column="REGIST_HOURS"/>
+		<result property="registMonth" column="REGIST_MONTH"/>
+		<result property="taskName" column="TASK_NAME"/>
+	</resultMap>
+	
+	<select id="getVList" parameterType="com.ebon.v3.dto.VAppUserHours" resultMap="appUserHoursMap">
+		SELECT ID, USER_ID, REGIST_DATE, TASK_ID, REGIST_HOURS,
+		REGIST_MONTH, TASK_NAME
+		FROM V_APP_USER_HOURS 
+		WHERE 1=1
+		<if test="null != id">AND ID = #{id}</if>
+		<if test="null != userId">AND USER_ID = #{userId}</if>
+		<if test="null != registDate">AND REGIST_DATE = #{registDate}</if>
+		<if test="null != taskId">AND TASK_ID = #{taskId}</if>
+		<if test="null != registHours">AND REGIST_HOURS = #{registHours}</if>
+		<if test="null != registMonth">AND REGIST_MONTH = #{registMonth}</if>
+		<if test="null != taskName">AND TASK_NAME = #{taskName}</if>
+	</select>
+</mapper>

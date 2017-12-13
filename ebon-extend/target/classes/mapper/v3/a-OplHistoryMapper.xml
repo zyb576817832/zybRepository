@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.oplhistory">
+
+	<resultMap type="com.ebon.v3.vo.OplHistory" id="oplVo">
+		<id property="id" column="ID"/>
+		<result property="oplId" column="OPL_ID"/>
+		<result property="oplDesc" column="OPL_DESC"/>
+		<result property="respUser" column="RESP_USER"/>
+		<result property="oplLevel" column="OPL_LEVEL"/>
+		<result property="oplDegree" column="OPL_DEGREE"/>
+		<result property="oplDescribe" column="OPL_DESCRIBE"/>
+		<result property="createUser" column="CREATE_USER"/>
+		<result property="createTime" column="CREATE_TIME"/>
+	</resultMap>
+	<sql id="columnsVo">
+		O.ID,
+		O.OPL_ID,
+		O.OPL_DESC,
+		O.OPL_DESCRIBE,
+		TO_CHAR(O.CREATE_TIME,'YYYY-MM-DD HH24:mi') AS CREATE_TIME
+	</sql>
+	<select id="getByOplId" parameterType="String" resultMap="oplVo">
+		
+		SELECT 
+			O.ID,
+			O.OPL_ID,
+			O.OPL_DESC,
+			O.OPL_DESCRIBE,
+		    CM.ACTUAL_NAME AS RESP_USER,
+		    CU.ACTUAL_NAME AS CREATE_USER,
+		    CO.CODE_NAME AS OPL_LEVEL,
+		    CC.CODE_NAME AS OPL_DEGREE,
+			TO_CHAR(O.CREATE_TIME,'YYYY-MM-DD HH24:mi') AS CREATE_TIME
+			 FROM APP_OPL_HISTORY O
+		     LEFT JOIN CM_USERS CM ON O.RESP_USER = CM.USER_ID
+		     LEFT JOIN CM_USERS CU ON O.CREATE_USER = CU.USER_ID
+		     LEFT JOIN CM_CODE CO ON O.OPL_LEVEL = CO.ID
+		     LEFT JOIN CM_CODE CC ON O.OPL_DEGREE = CC.ID
+		     WHERE O.OPL_ID = #{oplId}
+		ORDER BY O.CREATE_TIME DESC
+	</select>
+	
+
+</mapper>

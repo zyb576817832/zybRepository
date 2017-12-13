@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="oplActionMap">
+	<resultMap type="com.ebon.rpc.oplaction.vo.OplActionInfo" id="OplActionInfoMap">
+		<result property="oplId" 				column="OPLID" />
+		<!-- 以下被梁言兵注释掉，否则spring启动不了 
+		<result property="respNames" 			column="RESPNAMES" />
+		 -->
+		<result property="oplActionId" 			column="OPLACTIONID" />
+		<result property="actionName" 			column="ACTIONNAME" />
+		<result property="targetStartDate" 		column="TARGETSTARTDATE" />
+		<result property="targetEndDate" 		column="TARGETENDDATE" />
+		<result property="aclStartDate" 		column="ACLSTARTDATE" />
+		<result property="aclEndDate" 			column="ACLENDDATE" />
+		<result property="oritargetEndDate" 	column="ORITARGETENDDATE" />
+		<result property="status" 				column="STATUS" />
+	</resultMap>
+	<select id="getOplActionList" parameterType="com.ebon.rpc.oplaction.vo.OplActionListRequest" resultMap="OplActionInfoMap">
+		SELECT 
+				O.OPL_ID 							AS OPLID, 
+				WP.WORKPLAN_ID 				AS OPLACTIONID, 
+				WP.PLAN_NAME 					AS ACTIONNAME, 
+				TO_CHAR(WP.TARGET_START_DATE,'YYYY-MM-DD') 		AS TARGETSTARTDATE, 
+				TO_CHAR(WP.TARGET_END_DATE,'YYYY-MM-DD') 			AS TARGETENDDATE, 
+				TO_CHAR(WP.ACT_START_DATE,'YYYY-MM-DD')  			AS ACLSTARTDATE, 
+				TO_CHAR(WP.ACT_END_DATE,'YYYY-MM-DD')  				AS ACLENDDATE, 
+				TO_CHAR(WP.ORITARGET_END_DATE,'YYYY-MM-DD')  	AS ORITARGETENDDATE, 
+				WP.STATUS 						AS STATUS, 
+				US.USER_NAME 					AS RESPNAMES 
+		FROM CO_WORKPLAN WP 
+		 LEFT JOIN CO_OPL O ON WP.OPL_ID = O.OPL_ID 
+		 LEFT JOIN CM_PROJ P ON O.PROJ_ID = P.PROJ_ID 
+		 LEFT JOIN CM_USERTASK UT ON WP.WORKPLAN_ID = UT.TASK_ID 
+		 LEFT JOIN CM_USERS US ON UT.USER_ID = US.USER_ID 
+		 LEFT JOIN CM_USERS U ON O.RESP_ID = U.USER_ID 
+		<where>
+			<if test="projectCode != null">
+				P.PROJ_SHORT_NAME like '%'||#{projectCode}||'%' 
+			</if>
+			<if test="oplRespName != null">
+				and U.USER_NAME like #{oplRespName} 
+			</if>
+			<if test="status != null ">
+				and O.STATUS like #{status} 
+			</if>
+			<if test="oplId != null and oplIds == null">
+				and O.OPL_ID like #{oplId} 
+			</if>
+			<if test="oplId == null and oplIds != null">
+				and O.OPL_ID IN 
+				<foreach item="item" index="index" collection="oplIds" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="oplId != null and oplIds != null">
+				AND ( O.OPL_ID = #{oplId} OR O.OPL_ID IN 
+				<foreach item="item" index="index" collection="oplIds" open="(" separator="," close=")" >
+					#{item}
+				</foreach>
+				)
+			</if>
+			<if test="oplActionId != null">
+				AND WP.WORKPLAN_ID like #{oplActionId} 
+			</if>
+			<if test="actionStatus != null">
+				AND WP.STATUS like #{actionStatus}
+			</if>
+			<if test="actionRespName != null">
+				AND US.USER_NAME like #{actionRespName} 
+			</if>
+		</where>
+	</select>
+	<select id="getOplActionIdByOplIdAndOplActionName" parameterType="HashMap" resultType="String">
+		SELECT WP.WORKPLAN_ID
+		  FROM CO_WORKPLAN WP
+		WHERE WP.OPL_ID = #{oplId} 
+		    AND WP.PLAN_NAME = #{actionName} 
+	</select>
+	<!-- 删除OPLAction在CM_USERTASK中的记录 -->
+	<delete id="deleteOplActionUserTask" parameterType="String">
+		DELETE FROM CM_USERTASK UT WHERE UT.TASK_ID = #{oplActionId}
+	</delete>
+	<!--修改OPLActionInfo-->
+	<update id="updateOplActionInfo" parameterType="HashMap">
+		UPDATE
+		CO_WORKPLAN 
+		SET 
+		<if test="oplId != null">
+			opl_id = #{oplId},
+		</if>
+		<if test="oplActionId != null">
+			workplan_id = #{oplActionId},
+		</if>
+		<if test="actionName != null">
+			plan_name = #{actionName},
+		</if>
+		<if test="targetStartDate != null">
+			target_start_date =TO_DATE(#{targetStartDate},'YYYY-MM-DD'),
+		</if>
+		 <if test="targetEndDate != null">
+		 	target_end_date = TO_DATE(#{targetEndDate},'YYYY-MM-DD'), 
+		 </if>
+		 <if test="aclStartDate != null">
+		 	act_start_date = TO_DATE(#{aclStartDate},'YYYY-MM-DD'), 
+		 </if>
+		 <if test="aclEndDate != null">
+		 	act_end_date = TO_DATE(#{aclEndDate},'YYYY-MM-DD'), 
+		 </if>
+		 <if test="oritargetEndDate != null">
+		 	oritarget_end_date = TO_DATE(#{oritargetEndDate},'YYYY-MM-DD'), 
+		 </if>
+		 <if test="status != null">
+		 	status =#{status}, 
+		 </if>
+		 <if test="creatDate != null">
+		 	creat_date = TO_DATE(#{creatDate},'YYYY-MM-DD'), 
+		 </if>
+		 	UPDATE_DATE = sysdate 
+		 <where>
+			 <choose>
+			 	<when test="oplActionId != null">
+			 		AND workplan_id = #{oplActionId} 
+			 	</when>
+			 	<when test="oplActionId == null and oplId != null and actionName != null">
+					AND opl_id = #{oplId} AND plan_name = #{actionName} 
+			 	</when>
+			 	<otherwise>
+			 		AND 1 = 2
+			 	</otherwise>
+			 </choose>
+		 </where>
+	</update>
+	<!--添加OPLActionInfo -->
+	<insert id="insertOplActionInfo" parameterType="HashMap" >
+		INSERT INTO CO_WORKPLAN 
+		(OPL_ID, 
+		WORKPLAN_ID, 
+		PLAN_NAME, 
+		TARGET_START_DATE, 
+		TARGET_END_DATE, 
+		ACT_START_DATE, 
+		ACT_END_DATE, 
+		ORITARGET_END_DATE, 
+		STATUS, 
+		CREAT_DATE,
+		UPDATE_DATE 
+		) 
+		VALUES 
+		(#{oplId}, 
+		#{oplActionId}, 
+		#{actionName}, 
+		<if test="targetStartDate != null">
+			TO_DATE(#{targetStartDate},'YYYY-MM-DD'), 
+		</if>
+		<if test="targetStartDate == null ">
+			null,
+		</if>
+		<if test="targetEndDate != null ">
+			TO_DATE(#{targetEndDate},'YYYY-MM-DD'),
+		</if>
+		<if test="targetEndDate == null">
+			null, 
+		</if>
+		<if test="aclStartDate != null">
+			TO_DATE(#{aclStartDate},'YYYY-MM-DD'), 
+		</if>
+		<if test="aclStartDate == null">
+			null, 
+		</if>
+		<if test="aclEndDate != null ">
+			TO_DATE(#{aclEndDate},'YYYY-MM-DD'), 
+		</if>
+		<if test="aclEndDate == null ">
+			null, 
+		</if>
+		<if test="oritargetEndDate != null ">
+			TO_DATE(#{oritargetEndDate},'YYYY-MM-DD'), 
+		</if>
+		<if test="oritargetEndDate == null">
+			null, 
+		</if>
+		<if test="status != null">
+			#{status}, 
+		</if>
+		<if test="status == null ">
+			null, 
+		</if>
+		<if test="creatDate != null ">
+			TO_DATE(#{creatDate},'YYYY-MM-DD'), 
+		</if>
+		<if test="creatDate == null ">
+			null, 
+		</if>
+			sysdate 
+			) 
+	</insert>
+	<insert id="insertOplActionUserTask" parameterType="HashMap">
+		INSERT INTO CM_USERTASK UT 
+		  (
+		  UT.USER_ID,
+		  UT.TASK_ID,
+		  UT.TASK_TYPE,
+		  UT.IN_TIMESHEET,
+		  UT.STATUS,
+		  UT.FLAG
+		  )
+		VALUES 
+		  (
+		  #{respId},
+		  #{oplActionId},
+		  'OPL',
+		  '0',
+		  '1',
+		  '0'
+		  )
+	</insert>
+</mapper>

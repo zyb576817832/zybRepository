@@ -1,0 +1,139 @@
+#main\u9875\u9762\u7684tab\u5b57\u6bb5\u5c5e\u6027
+NEWTASK = New tasks
+ONGOINGTASK = Ongoing
+TABCOMPLETE = Complete
+HOURS = Hours
+MYASSIGN = My assign task
+ALL = All
+
+##task\u4e0b\u7684list\u9875\u9762\u6240\u6709\u5c5e\u6027
+NAME=Task name
+ASSIGN_USER_NAME = developer
+RESP_USER_NAME = Responsible person
+RESP_DEPT = Responsible department
+PROJECTNO = Project.No
+BASE_START_DATE = Scheduled start time
+BASE_END_DATE = Scheduled end time
+STATUS = Status
+TASKNAMEANDNAME = Task name\u3001name
+TASKTYPE = Type
+LEVEL = Priority level
+SERIOUS = Severity
+BASE_START_DATE1 = Scheduled start time:from
+BASE_START_DATE2 = to
+BASE_END_DATE1 = Scheduled end time:from
+BASE_END_DATE2 = to
+DEPTHEAD = Department head
+##\u7c7b\u578b\u4e0b\u62c9\u6846
+PLANTASK = Schedule tasks
+RISK = Risk
+DECOMPOSE = Task decomposition
+##\u72b6\u6001\u4e0b\u62c9\u6846
+UNBEGUN = Unbegun
+ONGOING = Ongoing
+APPROVAL = Approval
+COMPLETE = Complete
+CANCEL = Cancel
+
+#\u4efb\u52a1\u8be6\u60c5\u9875\u9762
+PROJCODE = Project Number
+PROJSTATUS = Project Status
+PROJCUSTOMER = The customer
+PROJSIZE = Project size
+PROJNAME = Project name
+PROJSTAGE = Stage
+PROJVEHICLE = Vehicle
+PROJENGINE  = The engine
+PROJPM = PM
+PROJSALES = Sales
+PROJTIMELIGHT = Progress
+PROJBUDGETLIGHT = Budget
+PROJCOSTLIGHT = Cost
+PROJQUALITYLIGHT = Quality
+
+#\u57fa\u672c\u9875\u9762
+BASEDETAILS = Task details
+BASEATTRIBUTES = Basic attribute
+BASETYPE = Type
+PARENTUSERTASK = Parent task name
+AGGINFLAG = Reject
+RELEVANTPROPERTIES = Relevant properties
+BASESERIOUS = Severity
+BASELEVEL = Priority level
+BASESOURCE = Source
+COMPLETION = Completion status
+ACTSTART = Actual start
+ACTEND = Actual end
+ACTHOURS = Actual working hours
+CHILDTASK = Task decomposition
+BASERESP = Responsible person
+BASEPLANHOURES = Plan working hours
+
+#main\u9875\u9762\u7684tab\u5c5e\u6027
+BASE = Basic
+PROJINFO = Project overview
+MILESTONE = Milestone
+DOC = Deliverables
+CHILDPAGE = Task decomposition
+TASKHOURS = Task working hours
+
+#\u6309\u94ae
+BUTTONAGREE = Get through
+BUTTONCANCEL = Cancel 
+BUTTONACCEPT = Accept
+BUTTONCOMPLETE = Complete
+BUTTONDISAGREE = Reject
+
+#\u91cc\u7a0b\u7891tab
+SYSPROJECT = System project
+CHILDPROJECT = Parts project
+MLEVEL = Level
+MNAME = Milestone name
+MPLANTIME = The plan time
+MACTTIME = The actual time
+MVERSION = Version
+MUPDATE = Update
+MADD = Add
+
+#\u4ea4\u4ed8\u7269tab
+DOCADD = ADD
+DOCNAME = NAME
+DOCUPTIME = Upload time
+DOCFILESIZE = The file size
+DOCOPERATION = Operation
+DOCCHOOSE = Choose file
+
+#\u4efb\u52a1\u5206\u89e3tab
+DECOADDTASK = Add task
+DECOADD = Add
+DECONAME = Name
+DECOSTATUS = Status
+DECOTIME = Start-stop time
+DECORESP = Responsible person
+DECOORIGINATOR = The originator
+DECOOPER = Operation
+DECOSTARTIME = Task start time
+DECOSTOPTIME = Task end time
+DECOHOURS = Plan working hours
+
+#\u8ba1\u5212\u5de5\u65f6tab
+HOURSALL = Summation
+HOURSH = Hour
+
+#opl\u5386\u53f2\u8bb0\u5f55
+OPLHUPDATETIME = Modification time
+OPLHUPDATEUSER = The modifier
+OPLHDESC = Problem description
+OPLHDEGREE = Severity
+OPLHLEVEL = Priority level
+OPLHRESPUSER = Responsible person
+OPLHDESCRIBE = Remark
+
+#milestone\u6309\u94ae
+MBUTTONADD = Add
+MBUTTONDELETE = Delete
+MBUTTONUPDATE = Update
+MBUTTONSUBMIT = Submit
+MBUTTONREST = Reset
+MBUTTONSAVE = Save the baseline
+MBUTTONSEARCH = Search

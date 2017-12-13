@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ebon.v3.appUser">
+	<resultMap type="com.ebon.app.service.user.vo.User" id="comboMap">
+		<id property="employeeId" column="USER_ID"/>
+		<result property="actualName" column="ACTUAL_NAME"/>
+	</resultMap>
+	
+	<select id="getComboListBySearch" parameterType="string" resultMap="comboMap">
+		SELECT USER_ID, ACTUAL_NAME FROM CM_USERS
+			WHERE ACTUAL_NAME LIKE CONCAT(CONCAT('%', #{search}),'%')
+	</select>
+</mapper>

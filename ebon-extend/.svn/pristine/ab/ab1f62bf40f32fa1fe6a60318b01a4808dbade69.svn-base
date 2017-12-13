@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="oplMapper">
+	<resultMap type="com.ebon.rpc.opl.vo.OplInfo" id="oplInfoMap">
+		<id property="oplName" column="OPLNAME"/>
+		<result property="oplId" column="OPLID"/>
+		<result property="respName" column="RESPNAME"/>
+		<result property="source" column="OPLSOURCE"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="remark" column="REMARK"/>
+		<result property="status" column="STATUS"/>
+	</resultMap>
+	<!-- 查询错误信息 -->
+	<select id="getOplInfo" parameterType="com.ebon.rpc.opl.vo.OplListRequest" resultMap="oplInfoMap">
+		 SELECT O.OPL_ID 										  		AS OPLID,
+		       	    O.OPL_NAME 										  	AS OPLNAME,
+		            U.USER_NAME										  	AS RESPNAME,
+		       		C.CODE_NAME  									  	AS OPLSOURCE,
+		       		TO_CHAR(O.CREATE_DATE, 'YYYY-MM-DD') 	AS CREATEDATE,
+		       		O.REMARK 												AS REMARK,
+		       		O.STATUS 												AS STATUS 
+		  FROM CO_OPL O 
+		  LEFT JOIN CM_CODE C ON O.OPL_SOURCE = C.ID 
+		  LEFT JOIN CM_USERS U ON O.RESP_ID = U.USER_ID 
+		  LEFT JOIN CM_PROJ P ON O.PROJ_ID = P.PROJ_ID 
+		  <where>
+		  		O.OPL_SOURCE = #{oplSource} 
+		  		<if test="projectCode != null">
+		  			AND P.PROJ_SHORT_NAME LIKE '%'||#{projectCode}||'%' 
+		  		</if>
+		  		<if test="respName != null">
+		  			AND U.USER_NAME = #{respName} 
+		  		</if>
+		  		<if test="status != null">
+		  			O.STATUS = #{status} 
+		  		</if>
+		  		<if test="oplId != null and oplIds == null ">
+		  			AND O.OPL_ID = #{oplId} 
+		  		</if>
+		  		<if test="oplId == null and oplIds != null ">
+		  			AND O.OPL_ID IN
+		  			<foreach item="item" index="index" collection="oplIds" open="(" separator="," close=")"> 
+						#{item} 
+					</foreach>
+		  		</if>
+		  		<if test="oplId != null and oplIds != null ">
+		  			AND ( O.OPL_ID = #{oplId} OR O.OPL_ID IN
+		  			<foreach item="item" index="index" collection="oplIds" open="(" separator="," close=")"> 
+						#{item}
+					</foreach>
+					 )
+		  		</if>
+		  </where>
+	</select>
+	<select id = "getOplIdByProjectCodeAndOplName" parameterType="HashMap" resultType="String">
+		 SELECT 
+					O.OPL_ID
+		   FROM CO_OPL O 
+		    LEFT JOIN CM_PROJ P ON O.PROJ_ID = P.PROJ_ID 
+     	 WHERE O.OPL_SOURCE = #{oplSource} 
+      		 AND P.PROJ_SHORT_NAME = #{projectCode} 
+      		 AND O.OPL_NAME = #{oplName} 
+	</select>
+	<select id = "getOplIsExist" parameterType="String" resultType="String">
+		SELECT O.OPL_ID 
+		  FROM CO_OPL O
+		WHERE O.OPL_ID = #{oplId} 
+	</select>
+	<update id="updateOplInfo" parameterType="HashMap">
+		UPDATE CO_OPL O 
+		SET 
+			<if test="projectInfoId != null">
+			  O.PROJ_ID = #{projectInfoId},
+			</if>
+			<if test="oplId != null">
+			  O.OPL_ID = #{oplId},
+			</if>
+			<if test="oplName != null">
+			  O.OPL_NAME = #{oplName},
+			</if>
+			<if test="respId != null">
+			  O.RESP_ID = #{respId},
+			  </if>
+			  O.OPL_SOURCE = #{source},
+			<if test="createDate != null">
+			  O.CREATE_DATE =	to_date(#{createDate},'yyyy-MM-dd'),
+			</if>
+			<if test="remark != null">
+			  O.REMARK = #{remark},
+			</if>
+			<if test="status != null">
+			  O.STATUS = #{status},
+			</if>
+			<if test="status == null">
+			  O.STATUS =	'OPEN',
+			</if>
+			  O.UPDATE_DATE = sysdate 
+        <where> 
+       	<choose>
+       		<when test="oplId != null">
+       			AND O.OPL_ID = #{oplId} 
+       		</when>
+       		<when test="oplId == null and projectInfoId != null and oplName != null">
+       			AND O.OPL_NAME = #{oplName} AND O.PROJ_ID = #{projectInfoId} 
+       		</when>
+       		<otherwise>
+       			AND 1 = 2
+       		</otherwise>
+       	</choose>
+		</where> 
+	</update>
+	<insert id="insertOplInfo" parameterType="HashMap">
+			INSERT INTO CO_OPL O
+			  (O.PROJ_ID,
+			   O.OPL_ID,
+			   O.OPL_NAME,
+			   O.RESP_ID,
+			   O.OPL_SOURCE,
+			   O.CREATE_DATE,
+			   O.REMARK,
+			   O.STATUS,
+			   O.UPDATE_DATE)
+			VALUES
+			  (
+			   		#{projectInfoId},
+			   		#{oplId},
+			  <if test="oplName != null">
+			   		#{oplName},
+			  </if>
+			  <if test="oplName == null">
+			   		null,
+			  </if>
+			  <if test="respId != null">
+			   		#{respId},
+			  </if>
+			  <if test="respId == null">
+			   		null,
+			  </if>
+			   		#{source},
+			  <if test="createDate != null">
+			   		to_date(#{createDate},'YYYY-MM-DD'),
+			  </if>
+			  <if test="createDate == null">
+			   		null,
+			  </if>
+			  <if test="remark != null">
+			   		#{remark},
+			  </if>
+			  <if test="remark == null">
+			   		null,
+			  </if>
+			  <if test="status != null">
+			   		#{status},
+			  </if>
+			  <if test="status == null">
+			   		'OPEN',
+			  </if>
+			   sysdate
+			  )
+	</insert>
+</mapper>

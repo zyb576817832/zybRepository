@@ -1,0 +1,166 @@
+package com.ebon.v3.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ebon.framework.vo.Message;
+import com.ebon.framework.vo.Result;
+import com.ebon.platform.dao.DaoException;
+import com.ebon.platform.dao.pager.Page;
+import com.ebon.platform.service.BaseService;
+import com.ebon.v3.service.IMileStoneService;
+import com.ebon.v3.vo.MileStone;
+
+@Service
+public class MileStoneService extends BaseService implements IMileStoneService{
+
+	private final static String mainDomain = "com.ebon.v3.mileStone";
+	@Override
+	public Result add(MileStone mileStone) {
+		
+		Result result = new Result();
+		try {
+			if(this.myBatisDao.save( mainDomain+".add",mileStone)){
+				result.setCode(Message.SUCCESS_CODE);
+			}
+		} catch (DaoException e) {
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		return result;
+	}
+
+	@Override
+	public Result deleteById(String id) {
+		Result result = new Result();
+		
+		try {
+			if(this.myBatisDao.delete(mainDomain+".deleteById",id)){
+				result.setCode(Message.SUCCESS_CODE);
+			}
+		} catch (DaoException e) {
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		
+		return result;
+	}
+
+	@Override
+	public Result saveBaseLine(List<MileStone> mileStone,String projId) {
+		Result result = new Result();
+		try {
+			if(this.myBatisDao.save(mainDomain + ".saveBaseLine",mileStone)){//保存基线
+				
+				if(this.myBatisDao.delete(mainDomain+".deleteByVersion",projId)){//保存基线之后要将版本为空的数据清除掉
+					result.setCode(Message.SUCCESS_CODE);
+				}
+			}
+		} catch (DaoException e) {
+			
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<MileStone> maxBaseLineData(Map<String,String> map,Page page) {
+		
+		List<MileStone> list = null;
+		
+		try {
+			list = this.myBatisDao.getList(mainDomain+".maxBaseLineData",map,page);//根据version判断
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		
+		return list;
+	}
+
+	@Override
+	public String maxBaseLine(Map<String,String> map) {
+		
+		String baseLine = "";
+		try {
+			baseLine = this.myBatisDao.getOne(mainDomain+".judegeBaseLine",map);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return baseLine;
+	}
+
+	@Override
+	public List<MileStone> maxChildBaseLineData(Map<String, String> map,Page page) {
+
+		List<MileStone> list = null;
+		try {
+			list = this.myBatisDao.getList(mainDomain+".maxChildBaseLineData",map,page);//根据version判断
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		
+		return list;
+	}
+
+	@Transactional(readOnly = false,
+			propagation = Propagation.REQUIRES_NEW)
+	@Override
+	public Result saveChildBaseLine(List<MileStone> list,String projId,String childId) {
+		Result result = new Result();
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("projId", projId);
+		map.put("childId", childId);
+		try {
+			if(this.myBatisDao.save(mainDomain + ".saveChildBaseLine",list)){
+				if(this.myBatisDao.delete(mainDomain+".deleteByVersionChile",map)){//保存基线之后要将版本为空的数据清除掉
+					result.setCode(Message.SUCCESS_CODE);
+				}
+			}
+		} catch (DaoException e) {
+			
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<MileStone> childBaseLineData(Map<String, String> map) {
+		List<MileStone> list = null;
+		try {
+			list = this.myBatisDao.getList(mainDomain+".childBaseLineData",map);//根据version判断
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public Result edit(MileStone mileStone) {
+		Result result = new Result();
+		
+		try {
+			if(this.myBatisDao.update(mainDomain+".edit",mileStone)){
+				result.setCode(Message.SUCCESS_CODE);
+			}
+			
+		} catch (DaoException e) {
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		return result;
+	}
+}

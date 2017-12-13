@@ -1,0 +1,166 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/common/meta1.jsp"%>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>任务详情主页面</title>
+<script type="text/javascript" src="${path}/v3/util.js"></script>
+<script type="text/javascript">
+
+	//格式化一些值
+	$(function(){
+		 //类型
+		if('${userTask.type}'=='1'){
+			$('#type').val('<spring:message code="PLANTASK"/>');
+		}else if('${userTask.type}'=='2'){
+			$('#type').val('<spring:message code = "RISK"/>');
+		}else if('${userTask.type}'=='3'){
+			$('#type').val('OPL');
+		}else if('${userTask.type}'=='4'){
+			$('#type').val('<spring:message code = "DECOMPOSE"/>');
+		}
+		 
+		 if('1'=='${userTask.agginFlag}'){
+			 $('#agginFlag').val('Yes');
+		 }else{
+			 $('#agginFlag').val('No');
+		 }
+		 
+		//分解任务
+		var child = '';
+		if('${userTask.childUndo}'){
+			child += '${userTask.childUndo}';
+		}
+		if('${userTask.childSum}'){
+			child += '/';
+			child += '${userTask.childSum}';
+		}
+		$('#child').val(child);
+	});
+
+	function startTask(){
+		changeStatus('2');
+	}
+	function cancleTask(){
+		changeStatus('5');
+	}
+	function approveTask(){
+		changeStatus('3');
+	}
+	function agreeTask(){
+		changeStatus('4');
+	}
+	function notAgreeTask(){//如果驳回修改为已开始,同时标记驳回
+		changeStatus('2');
+	}
+	
+	function changeStatus(status){
+		$.post('${path}/app/userTaskPlatfrom/changeStatus.action?id=${userTask.id}&status='+ status,function(data){
+			$.messager.alert('Message','success');
+			parentTableReload();
+		},'json');
+	}
+	
+	function parentTableReload(){
+		parent.tableReload();//重新加载父页面状态
+		parent.getTaskMainPage('${userTask.id}');
+	}
+</script>
+</head>
+<body>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'center'"  style="height:200px;width:100%; margin: 2px 5px;">
+			<table border="1" bordercolor="#a0c6e5" style="border-collapse:collapse; width:100%;table-layout:fixed">
+				<tr>
+					<td colspan="2" width="350px;"><h3 id="tab1_info_taskName">${userTask.name }</h3></td>
+					<!-- 全部任务不显示任何按钮 -->
+					<c:if test="${1 ne type }">
+						<c:if test="${1 eq userTask.status and userTask.respUser eq userId}">
+							<td><input type="button" value="Accept" onclick="startTask()" style="width:80px"></td>
+						</c:if>
+						<!-- 未开始前发包人可以取消-->
+						<c:if test="${1 eq userTask.status and userTask.assginUser eq userId}">
+							<td><input type="button" value="<spring:message code="Cancel"/>" onclick="cancleTask()" style="width:80px"></td>
+						</c:if>
+						<c:if test="${2 eq userTask.status }">
+							<td><input type="button" value="Finish" onclick="approveTask()" style="width:80px"></td>
+						</c:if>
+						<!-- 且只有发包人可以看到 -->
+						<c:if test="${3 eq userTask.status and userTask.assginUser eq userId}">
+							<td><input type="button" value="Through" onclick="agreeTask()" style="width:80px"></td>
+							<td><input type="button" value="Reject" onclick="notAgreeTask()" style="width:80px"></td>
+						</c:if>
+					</c:if>
+				</tr>
+				<tr>
+					<td><spring:message code="BASERESP"/>:</td>
+					<td>${userTask.respUserName}(${userTask.respDept})</td>
+					<td><spring:message code="BASEPLANHOURES"/>:</td>
+					<td>${userTask.planHours}</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'south',split:true" style="height:350px;">
+			<div class="easyui-tabs" data-options="fit:true">
+			<spring:message code="BASE" var="BASE"/>
+				<div title="${BASE }" data-options="closable:true">
+					<div class="easyui-panel" style="width:auto; height:auto; padding:2px 3px;">
+						<hr />
+						<div style="margin-bottom:5px">
+							<spring:message code="BASETYPE"/>：<input class="easyui-validatebox" id="type" style="width:40%" data-options="readonly:true" readonly="readonly">
+							<c:if test="${parentUserTask.name ne null }">
+								<spring:message code="PARENTUSERTASK"/>：<input class="easyui-validatebox" value="${parentUserTask.name }"  style="width:40%" readonly="readonly">
+							</c:if>
+						</div>
+						
+						<div style="margin-bottom:5px">
+							<spring:message code="AGGINFLAG"/>：<input class="easyui-validatebox" id="agginFlag"  style="width:40%" readonly="readonly">
+						</div>
+						
+						<hr />
+						<div style="margin-bottom:5px">
+								<spring:message code="BASESERIOUS"/>：<input class="easyui-validatebox" name="name" value="${userTask.seriousName }"  style="width:40%"  readonly="readonly">
+								<spring:message code="BASELEVEL"/>：<input class="easyui-validatebox" name="name" value="${userTask.priorityName }"  style="width:40%"  readonly="readonly">
+						</div>
+						<div style="margin-bottom:5px">
+								<spring:message code="BASESOURCE"/>：<input class="easyui-validatebox" name="name" value="${userTask.source }"  style="width:40%"  readonly="readonly">
+						</div>
+						<hr />
+						<div style="margin-bottom:5px">
+							<spring:message code="ACTSTART"/>：<input class="easyui-validatebox" value="${userTask.actStartDate }" style="width:40%"  readonly="readonly">
+							<spring:message code="ACTEND"/>：<input class="easyui-validatebox" value="${userTask.actEndDate }" style="width:40%"  readonly="readonly">
+						</div>
+						<div style="margin-bottom:5px">
+							<spring:message code="ACTHOURS"/>：<input class="easyui-validatebox" value="${userTask.actHours }"  style="width:40%"  readonly="readonly">
+							<spring:message code="CHILDTASK"/>：<input class="easyui-validatebox" id="child" style="width:40%"  readonly="readonly">
+						</div>
+					</div>
+				</div>
+				<spring:message code="PROJINFO" var="PROJINFO"/>
+				<spring:message code="MILESTONE" var="MILESTONE"/>
+				<spring:message code="DOC" var="DOC"/>
+				<spring:message code="CHILDPAGE" var="CHILDPAGE"/>
+				<spring:message code="TASKHOURS" var="TASKHOURS"/>
+				<div title="${PROJINFO }" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getProjInfoPage.action?randomNum=${randomNum}&projId=${userTask.projId}" style="width:98%;height:95%;padding:0px;"></iframe>
+				</div>
+				<div title="${MILESTONE }" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getMileStonePage.action?randomNum=${randomNum}&projId=${userTask.projId}" style="width:98%;height:95%;padding:0px;"></iframe>
+				</div>
+				<div title="${DOC }" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getDocPage.action?randomNum=${randomNum}&userId=${userId}&taskId=${userTask.id}" style="width:98%;height:98%;"></iframe>
+				</div>
+				<!-- 子任务不可以再分解 -->
+				<c:if test="${userTask.parentId eq null }">
+					<div title="${CHILDPAGE }" data-options="closable:true">
+						<iframe src="${path}/v3/app/menu/task/getChildPage.action?randomNum=${randomNum}&userId=${userId}&taskId=${userTask.id}" style="width:98%;height:98%;padding:0px;"></iframe>
+					</div>
+				</c:if>
+				<div title="${TASKHOURS }" id="tab1_tab15" data-options="closable:true">
+					<iframe src="${path}/v3/app/menu/task/getCalendarPage.action?randomNum=${randomNum}&userId=${userId}&taskId=${userTask.id}" style="width:98%;height:98%;"></iframe>
+				</div>
+			</div>			
+		</div>
+	</div>
+</body>
+</html>

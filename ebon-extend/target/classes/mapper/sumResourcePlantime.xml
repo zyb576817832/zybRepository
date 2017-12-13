@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="usertaskPlanTime">
+	<!-- 查询项目信息根据查询条件 -->
+	<select id="getTaskForUpdate" parameterType="String" resultType="HashMap">
+		SELECT CS.USERTASK_ID, CS.PLAN_TIME, CK.PLAN_START_DATE, CK.PLAN_END_DATE
+		  FROM CM_USERTASK CS
+		 INNER JOIN CM_TASK CK ON CS.TASK_ID = CK.TASK_ID
+		WHERE CS.PLAN_TIME IS NOT NULL AND CK.UPDATE_DATE > TO_DATE(#{updateDate}, 'YYYY-MM-DD')
+	</select>	
+	<update id="update" parameterType="HashMap">
+		UPDATE TS_RESOURCEPLAN R
+		   SET R.PLAN_HOURS = #{hours}
+		 WHERE R.USERTASK_ID = #{userTaskId}
+		   AND R.TIMEPLAN_DATE = TO_DATE(#{timeSheetDate}, 'YYYY-MM-DD')
+	</update>	
+	<insert id="insert" parameterType="HashMap">
+		INSERT INTO TS_RESOURCEPLAN (PLAN_HOURS, USERTASK_ID, TIMEPLAN_DATE) VALUES (#{hours}, #{userTaskId}, TO_DATE(#{timeSheetDate}, 'YYYY-MM-DD'))
+	</insert>	
+</mapper>

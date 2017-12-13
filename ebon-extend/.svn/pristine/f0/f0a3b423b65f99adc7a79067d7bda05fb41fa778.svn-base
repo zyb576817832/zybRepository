@@ -1,0 +1,143 @@
+package com.ebon.v3.service;
+
+import java.util.List;
+
+import com.ebon.app.service.user.vo.User;
+import com.ebon.framework.vo.Result;
+import com.ebon.platform.dao.pager.Page;
+import com.ebon.v3.dto.VAppUserTaskPlatfrom;
+import com.ebon.v3.vo.AppProjInfo;
+import com.ebon.v3.vo.AppUserTaskPlatfrom;
+
+public interface IAppUserTaskPlatfromService {
+	
+	/**
+	 * 标准插入方法
+	 * @param userTask
+	 * @return
+	 */
+	public Result add(AppUserTaskPlatfrom userTask);
+	
+	/**
+	 * 修改任务状态
+	 * @param id
+	 * @param status1未开始2已开始3审批中4完成5已取消
+	 * @return
+	 */
+	public Result changeStatus(String id, String status);
+	
+	
+	/**
+	 * 标准方法
+	 * @param id
+	 * @return
+	 */
+	public AppUserTaskPlatfrom getById(String id);
+	
+	/**
+	 * 标准方法
+	 * @param id
+	 * @return
+	 */
+	public VAppUserTaskPlatfrom getVById(String id);
+	
+	/**
+	 * 标准更新方法
+	 * @param update
+	 * @return
+	 */
+	public Result update(AppUserTaskPlatfrom update);
+	
+	/**
+	 * 标准删除方法
+	 * 如果是子任务会更新父任务数量
+	 * @param ID
+	 * @param UPDATEuSER
+	 * @return
+	 */
+	public Result delete(String id, String updateUser);
+	
+	/**
+	 * 标准检索
+	 * @param query
+	 * @return
+	 */
+	public List<AppUserTaskPlatfrom> getList(AppUserTaskPlatfrom query);
+	
+	/**
+	 * 标准检索
+	 * @param query
+	 * @param page
+	 * @return
+	 */
+	public List<VAppUserTaskPlatfrom> getVList(VAppUserTaskPlatfrom query, Page page);
+	
+	/**
+	 * 领导人检索
+	 * @param query
+	 * @param page
+	 * @return
+	 */
+	public List<VAppUserTaskPlatfrom> getVLeaderList(VAppUserTaskPlatfrom query, Page page);
+	
+	/**
+	 * 获取我的全部任务：
+	 * userId必传：发起人是我或者责任人是我
+	 * @param query
+	 * @param page
+	 * @return
+	 */
+	public List<VAppUserTaskPlatfrom> getAllByUserId(VAppUserTaskPlatfrom query, Page page);
+	
+	/**
+	 * 根据责任人或发包人或任务名称
+	 * 进行like查询
+	 * @param userId
+	 * @param searchName
+	 * @param page
+	 * @return
+	 */
+	public List<VAppUserTaskPlatfrom> getAllBySearchName(String userId, String searchName, Page page);
+	
+	/**
+	 * 根据关键字检索用户
+	 * 为空则返回全部
+	 * @param search
+	 * @return 
+	 */
+	public List<User> getComboListBySearch(String search);
+	
+	/**
+	 * 更新父任务的子任务数量
+	 * @param parentId
+	 * @return
+	 */
+	public Result updateChildCount(String parentId);
+	
+	/**
+	 * 根据项目ID获取项目概览信息
+	 * @param projId
+	 * @return
+	 */
+	public AppProjInfo getProjById(String projId);
+	
+	/**
+	 * 根据USERID获取对应部门以及是否领导标识
+	 * @param userId
+	 * @return
+	 */
+	public VAppUserTaskPlatfrom getVByUserId(String userId);
+	
+	/**
+	 * 获取领导人部门及下属部门
+	 * @param deptNo
+	 * @return
+	 */
+	public List<VAppUserTaskPlatfrom> getLeaderDept(String deptNo);
+	
+	/**
+	 * 获取管理员权限下的所有部门
+	 * @return
+	 */
+	public List<VAppUserTaskPlatfrom> getManagerDept();
+}

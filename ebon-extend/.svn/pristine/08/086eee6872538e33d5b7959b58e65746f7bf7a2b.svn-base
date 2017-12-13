@@ -1,0 +1,265 @@
+package com.ebon.v3.service.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.ebon.app.service.user.vo.User;
+import com.ebon.framework.util.DateUtil;
+import com.ebon.framework.util.StringUtil;
+import com.ebon.framework.vo.Message;
+import com.ebon.framework.vo.Result;
+import com.ebon.platform.dao.DaoException;
+import com.ebon.platform.dao.pager.Page;
+import com.ebon.platform.service.BaseService;
+import com.ebon.v3.dto.VAppUserTaskPlatfrom;
+import com.ebon.v3.service.IAppUserTaskPlatfromService;
+import com.ebon.v3.vo.AppProjInfo;
+import com.ebon.v3.vo.AppUserTaskPlatfrom;
+
+@Service
+public class AppUserTaskPlatfromService extends BaseService implements
+		IAppUserTaskPlatfromService {
+	
+	private static String mapperDomain = "com.ebon.v3.appUserTaskPlatform";
+
+	@Override
+	public Result add(AppUserTaskPlatfrom userTask) {
+		Result result = new Result();
+		try {
+			if(this.myBatisDao.save(mapperDomain + ".add", userTask)){
+				result.setCode(Message.SUCCESS_CODE);
+			}
+		} catch (DaoException e) {
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		return result;
+	}
+
+	@Override
+	public Result changeStatus(String id, String status) {
+		AppUserTaskPlatfrom update = new AppUserTaskPlatfrom();
+		AppUserTaskPlatfrom task = this.getById(id);
+		if("2".equals(status)){//开始
+			if("3".equals(task.getStatus())){//如果是驳回后置为未开始,则不设置实际开始时间
+				update.setAgginFlag("1");
+			}else{
+				update.setActStartDate(DateUtil.getCurrentDate());
+			}
+			
+		}else if("4".equals(status)){//完成
+			update.setActEndDate(DateUtil.getCurrentDate());
+		}
+		update.setId(id);
+		update.setStatus(status);
+		Result result = this.update(update);
+		
+		if(StringUtil.isNotNull(task.getParentId())){
+			this.updateChildCount(task.getParentId());
+		}
+		return result;
+	}
+
+	@Override
+	public List<VAppUserTaskPlatfrom> getVList(VAppUserTaskPlatfrom query,
+			Page page) {
+		List<VAppUserTaskPlatfrom> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain + ".getVList", query, page);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public List<VAppUserTaskPlatfrom> getAllByUserId(VAppUserTaskPlatfrom query, Page page) {
+		List<VAppUserTaskPlatfrom> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain + ".getAllByUserId", query, page);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public VAppUserTaskPlatfrom getVById(String id) {
+		VAppUserTaskPlatfrom ret = null;
+		try {
+			ret = this.myBatisDao.getOne(mapperDomain + ".getVById", id);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return ret;
+	}
+	
+	@Override
+	public AppUserTaskPlatfrom getById(String id) {
+		AppUserTaskPlatfrom ret = null;
+		try {
+			ret = this.myBatisDao.getOne(mapperDomain + ".getById", id);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return ret;
+	}
+
+	@Override
+	public Result update(AppUserTaskPlatfrom update) {
+		Result result = new Result();
+		try {
+			if(this.myBatisDao.update(mapperDomain + ".update", update)){
+				result.setCode(Message.SUCCESS_CODE);
+			}
+		} catch (DaoException e) {
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		return result;
+	}
+
+	@Override
+	public List<VAppUserTaskPlatfrom> getAllBySearchName(String userId,
+			String searchName,Page page) {
+		List<VAppUserTaskPlatfrom> list = null;
+		try {
+			Map<String, String> params = new HashMap<String, String>();
+			params.put("userId", userId);
+			params.put("searchName", searchName);
+			list = this.myBatisDao.getList(mapperDomain + ".getAllBySearchName", params, page);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public List<User> getComboListBySearch(String search) {
+		List<User> list = null;
+		try {
+			list = this.myBatisDao.getList( "com.ebon.v3.appUser.getComboListBySearch", search);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public Result updateChildCount(String parentId) {
+		AppUserTaskPlatfrom query = new AppUserTaskPlatfrom();
+		query.setParentId(parentId);
+		List<AppUserTaskPlatfrom> list = this.getList(query);
+		int i = 0;
+		for (AppUserTaskPlatfrom one : list) {
+			if("4".equals(one.getStatus())){
+				i++;
+			}
+		}
+		AppUserTaskPlatfrom  update = this.getById(parentId);
+		update.setChildUndo(i+"");
+		update.setChildSum(list.size()+"");
+		return this.update(update);
+	}
+
+	@Override
+	public Result delete(String id, String userId) {
+		Result result = new Result();
+		try {
+			Map<String, String> params = new HashMap<String, String>();
+			params.put("id", id);
+			params.put("userId", userId);
+			if(this.myBatisDao.delete(mapperDomain + ".delete", params)){
+				result.setCode(Message.SUCCESS_CODE);
+			}
+			
+			AppUserTaskPlatfrom task = this.getById(id);
+			if(StringUtil.isNotNull(task.getParentId())){
+				this.updateChildCount(task.getParentId());
+			}
+		} catch (DaoException e) {
+			result.setCode(Message.FAILED_CODE);
+			result.setMsg(e.toString());
+			log.error(e);
+		}
+		return result;
+	}
+
+	@Override
+	public List<AppUserTaskPlatfrom> getList(AppUserTaskPlatfrom query) {
+		List<AppUserTaskPlatfrom> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain + ".getList", query);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public AppProjInfo getProjById(String projId) {
+		AppProjInfo proj = null;
+		try {
+			proj = this.myBatisDao.getOne(mapperDomain + ".getProjById", projId);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return proj;
+	}
+
+	@Override
+	public List<VAppUserTaskPlatfrom> getVLeaderList(
+			VAppUserTaskPlatfrom query, Page page) {
+		
+		List<VAppUserTaskPlatfrom> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain + ".getVLeaderList", query, page);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public VAppUserTaskPlatfrom getVByUserId(String userId) {
+		VAppUserTaskPlatfrom ret = null;
+		try {
+			ret = this.myBatisDao.getOne(mapperDomain + ".getVByUserId", userId);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return ret;
+		
+	}
+
+
+	@Override
+	public List<VAppUserTaskPlatfrom> getLeaderDept(String deptNo) {
+	
+		List<VAppUserTaskPlatfrom> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain + ".getLeaderDept", deptNo);
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+	@Override
+	public List<VAppUserTaskPlatfrom> getManagerDept() {
+		
+		List<VAppUserTaskPlatfrom> list = null;
+		try {
+			list = this.myBatisDao.getList(mapperDomain + ".getManagerDept");
+		} catch (DaoException e) {
+			log.error(e);
+		}
+		return list;
+	}
+
+}

@@ -72,6 +72,7 @@ public class UserTaskPlatform extends BaseTest {
 		appUserTaskPlatfromService.getAllByUserId(query, new Page());
 		
 		
+		appUserTaskPlatfromService.getAllBySearchName("AC48BC7041464DB892FB4DBFB2652ED3", "梅", new Page());
 		
 		
 		List<User> users = appUserTaskPlatfromService.getComboListBySearch("");
